@@ -616,8 +616,5 @@ RKI_COVID19 %>%
                 fixed_thead = T,
                 html_font = "helvetica",
                 font_size = 16)
-  
-
-#Für GitHub Test
 ```
 
