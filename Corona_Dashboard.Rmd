@@ -1,0 +1,623 @@
+---
+title: "Corona Dashboard"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: rows
+    vertical_layout: fill
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(readr)
+library(dplyr)
+library(psych)
+library(ggplot2)
+library(tidyverse)
+library(magrittr)
+library(lubridate)
+library(tidyr)
+library(zoo)
+library(plotly)
+library(wesanderson)
+library(EpiEstim)
+library(tidymetrics)
+library(kableExtra)
+library(ggthemes)
+library(gghighlight)
+library(here)
+theme_set(theme_light())
+```
+
+
+```{r, include=FALSE}
+rm(list = ls())  #Loescht alle Vorherigen Variablen und Daten aus R
+#setwd(here())
+
+url = "https://www.arcgis.com/sharing/rest/content/items/f10774f1c63e40168479a1feb6c7ca74/data"
+
+
+#Zähler für R-Markdown initialisieren. Nur wenn i=1 ist, wird Markdown erstellt
+i = 0
+
+!file.exists(paste0(here("data/RKI/RKI_COVID19_"), Sys.Date(), ".csv"))
+
+if (!file.exists(paste0(here("data/RKI/RKI_COVID19_"), Sys.Date(), ".csv"))) {
+  download.file(
+    url,
+    destfile = paste0(
+      here("data/RKI/RKI_COVID19_"),
+      Sys.Date(),
+      ".csv"))
+
+  #Wenn es einen neuen RKI Datensatz gibt, wird Zähler i auf i=1 gesetzt. Damit wird das Markdownskript kompiliert.
+  i = 1
+}
+
+#Datensatz vom Vortag zippen und Originaldatei löschen. 
+if (file.exists(paste0(here("data/RKI/RKI_COVID19_"), Sys.Date(), ".csv"))) {
+  setwd(here("data/RKI/"))
+  
+  zip(
+    zipfile = paste0(here("data/RKI/RKI_COVID19_"), Sys.Date() - 1,""),
+    files = paste0("RKI_COVID19_", Sys.Date() - 1, ".csv"))
+  
+    #Wenn .zip datei existiert, .csv löschen
+    if (file.exists(paste0(here("data/RKI/RKI_COVID19_"), Sys.Date() - 1, ".zip"))) {
+      file.remove(paste0(here("data/RKI/RKI_COVID19_"), Sys.Date() - 1, ".csv"))
+    }
+  setwd(here())
+}
+
+```
+
+
+```{r include=FALSE}
+if (!exists("RKI_COVID19")) {
+  RKI_COVID19 <-
+    read_csv(paste0(here("data/RKI/RKI_COVID19_"), Sys.Date(), ".csv")) %>%
+    mutate(
+      Meldedatum = ymd(as.Date(Meldedatum)),
+      Refdatum = ymd(as.Date(Refdatum)),
+      Datenstand = as_date(dmy_hm(Datenstand))) %>%
+    arrange(desc(Meldedatum))
+}
+
+Lockdown1 = as.Date("2020-03-22")
+Lockdown2 = as.Date("2020-11-02")
+MaxDatum = max(RKI_COVID19$Meldedatum)
+MinDatum = min(RKI_COVID19$Meldedatum)
+EinwohnerzahlBund = 83166711
+  #83187500
+
+#RKI_Landkreise laden und für die Einwohnerzahlen aufbereiten
+RKI_Corona_Landkreise <- read_csv(here("data/RKI_Corona_Landkreise.csv"))
+Einwohner_Bundesland_Landkreise_df = RKI_Corona_Landkreise %>% 
+  select(RS, EWZ, EWZ_BL) %>% 
+  rename(IdLandkreis = RS,
+         EWZ_LK = EWZ) 
+
+
+```
+
+
+
+```{r}
+Neufindektion_Datum_df <- read_csv(here("data/Erstellt/Neufindektion_Datum_df.csv"))
+
+if (all(max(RKI_COVID19$Meldedatum) + 1 != Neufindektion_Datum_df$Datum)) {
+  #Datum in Datumschreiben. Maximales Datum aus Datensatz +1 rechnen.
+  #Im Datenframe eine neue Zeile anlegen [+1,1]
+  Neufindektion_Datum_df[nrow(Neufindektion_Datum_df) + 1, 1] = max(RKI_COVID19$Meldedatum) + 1
+  
+  Neufindektion_Datum_df[nrow(Neufindektion_Datum_df), 2] = RKI_COVID19 %>%
+    filter(NeuerFall %in% c(-1, 1)) %>%
+    summarise(AnzahlFall = sum(AnzahlFall)) %>%
+    as.numeric()
+  
+  Neufindektion_Datum_df = Neufindektion_Datum_df %>%
+    arrange(desc(Datum))
+  
+  
+  write.csv(Neufindektion_Datum_df,
+            here("data/Erstellt/Neufindektion_Datum_df.csv"),
+            row.names = F)
+}
+
+```
+Tagesaktuelle Zahlen   {data-icon="fa-sticky-note"}
+===================================== 
+
+Row {data-height=125}
+-----------------------------------------------------------------------
+
+### Neuinfektionen Gesamt
+
+```{r}
+Bund_ZumVortag_df = RKI_COVID19 %>%
+  filter(NeuerFall %in% c(-1, 1)) %>%
+  summarise(Bundesland= "Gesamt",
+            "Differenz zum Vortag" = sum(AnzahlFall))
+
+valueBox(
+  Bund_ZumVortag_df$`Differenz zum Vortag`,
+  icon = "fa-plus",
+  caption = "Neuinfektionen Gesamt",
+  color = ifelse(Bund_ZumVortag_df$`Differenz zum Vortag` == max(Neufindektion_Datum_df$Neuinfektionen), "warning", "primary"))
+```
+
+
+
+### Bund_Fälle_Gesamt
+
+```{r}
+Bund_Fälle_Gesamt_df = RKI_COVID19 %>%
+  filter(NeuerFall %in% c(0,1)) %>%
+  summarise(Bundesland = "Gesamt",
+            Anzahl = sum(AnzahlFall))
+
+valueBox(Bund_Fälle_Gesamt_df$Anzahl, icon = "fa-stethoscope",caption = "Anzahl aller Fälle ",color = "info")
+
+```
+
+
+### 7 Tage Inzidenz
+
+```{r}
+ma <- function(x, n = 7) {
+  stats::filter(x, rep(1 / n, n), sides = 2)
+}
+
+Bund = RKI_COVID19 %>%
+  filter(NeuerFall %in% c(0, 1)) %>%
+  group_by(Meldedatum) %>%
+  summarise(AnzahlFall = sum(AnzahlFall)) %>%
+  ungroup() %>%
+  mutate(ma_AnzahlFall = round(ma(AnzahlFall)))
+
+LetzteWocheInzidenz = Bund %>% 
+  filter(Meldedatum>Sys.Date()-8) %>% 
+  select(AnzahlFall) %>% 
+  sum()
+
+
+VorletzteWocheInzidenz = Bund %>% 
+  filter(Meldedatum>Sys.Date()-15) %>% 
+  filter(Meldedatum<Sys.Date()-7) %>% 
+  select(AnzahlFall) %>% 
+  sum()
+
+
+
+LetzteWocheInzidenz = round(LetzteWocheInzidenz/(EinwohnerzahlBund/100000),1)
+VorletzteWocheInzidenz = round(VorletzteWocheInzidenz/(EinwohnerzahlBund/100000),1)
+
+
+
+valueBox(LetzteWocheInzidenz, 
+         icon = ifelse(LetzteWocheInzidenz>VorletzteWocheInzidenz,"fa-arrow-up","fa-arrow-down"),
+         caption = "7 Tage Inzidenz", 
+         color = ifelse(LetzteWocheInzidenz>VorletzteWocheInzidenz,"#cd6689","#66CDAA"))
+
+
+```
+
+### Durchseuchung 
+```{r}
+valueBox(round(Bund_Fälle_Gesamt_df$Anzahl/EinwohnerzahlBund*100,2),
+         icon = "fa-percent",
+         caption = "Durchseuchung", 
+         color = "#66cccc")
+```
+
+
+```{r eval=FALSE, include=FALSE}
+gauge(round(Bund_Fälle_Gesamt_df$Anzahl/EinwohnerzahlBund*100,2), 
+      min = 0, 
+      max = 100, 
+      symbol = '%',
+      gaugeSectors(success = c(70, 100), warning = c(60, 70), danger = c(0, 59)))
+```
+
+Row {data-height=875}
+-----------------------------------------------------------------------
+
+### Bundesländer
+
+```{r}
+Bund_ZumVortag_df = RKI_COVID19 %>%
+  filter(NeuerFall %in% c(-1,1)) %>% 
+  summarise(Bundesland = "Gesamt",
+            "Differenz zum Vortag" = sum(AnzahlFall)) 
+
+#Anzahl aller Covid Fälle seit beginn  (Anzahl Fälle der aktuellen Publikation als Summe(AnzahlFall), wenn NeuerFall in (0,1))
+Bund_Fälle_Gesamt_df = RKI_COVID19 %>%
+  filter(NeuerFall %in% c(0,1)) %>%
+  summarise(Bundesland = "Gesamt",
+            Anzahl = sum(AnzahlFall))
+
+Bund_Tabelle_df = full_join(Bund_ZumVortag_df, Bund_Fälle_Gesamt_df, by = "Bundesland")
+
+
+#Bundesländer Tabelle. Infektionen zum Vortag 
+#Bundesländer heute zum Vortag neue Fälle nach Bundesland
+Bundeslaender_ZumVortag_df = RKI_COVID19 %>% 
+  filter(NeuerFall %in% c(-1,1)) %>% 
+  group_by(Bundesland) %>% 
+  summarise(AnzahlFall = sum(AnzahlFall)) %>%
+  `colnames<-`(c("Bundesland","Differenz zum Vortag")) %>% 
+  arrange(Bundesland)
+
+#Bundesländer Fälle Gesamt
+Bundeslaender_FälleGesamt_df = RKI_COVID19 %>% 
+  filter(NeuerFall %in% c(0,1)) %>% 
+  group_by(Bundesland) %>% 
+  summarise(AnzahlFall = sum(AnzahlFall)) %>% 
+  `colnames<-`(c("Bundesland","Anzahl")) %>% 
+  arrange(Bundesland)
+
+#Bundesländer Tabelle. Infektionen zum Vortag
+Bundesländer_Tabelle_df = full_join(Bundeslaender_ZumVortag_df, Bundeslaender_FälleGesamt_df,  by = "Bundesland")
+
+
+Bundesländer_Bund_Tabelle_df = bind_rows(Bundesländer_Tabelle_df,Bund_Tabelle_df)
+
+
+#Tabelle für 7 Tage inzidenz erstellen
+Bundesländer_Bund_7_Tabelle_df = RKI_COVID19 %>%
+  filter(NeuerFall %in% c(0, 1)) %>% 
+  rename(date = Meldedatum) %>%
+  cross_by_dimensions(Bundesland) %>%
+  cross_by_periods(windows = c(7)) %>% #Ordenet sich wohl vom heutigen Tag an nicht vorm ersten aus dem Datensatz 
+  summarize(AnzahlFall = sum(AnzahlFall)) %>% 
+  rename("Fälle in den letzen 7 Tagen" = AnzahlFall) %>% 
+  filter(date == Sys.Date()-1,
+         period == "rolling_7d") %>% 
+  mutate(Bundesland = ifelse(Bundesland=="All","Gesamt",Bundesland))
+
+
+Einwohner_Bundesland_df = read_csv2("data/einwohner_bundesland.csv") 
+Einwohner_Bundesland_df = Einwohner_Bundesland_df %>% 
+  add_row(tibble_row(Bundesland = "Gesamt", Einwohner = sum(Einwohner_Bundesland_df$Einwohner)))
+
+
+Bundesländer_Bund_7Tage_Inzidenz_Tabelle_df = full_join(Einwohner_Bundesland_df, Bundesländer_Bund_7_Tabelle_df,   by = "Bundesland")
+
+Bundesländer_Bund_7Tage_Inzidenz_Tabelle_df = Bundesländer_Bund_7Tage_Inzidenz_Tabelle_df %>% 
+  mutate("7 Tage Inzidenz" = round((`Fälle in den letzen 7 Tagen`/Einwohner)*100000,1)) %>% 
+  select(Bundesland,`Fälle in den letzen 7 Tagen`,`7 Tage Inzidenz`)
+  
+
+
+Bundesländer_Bund_Tabelle_df = full_join(Bundesländer_Bund_Tabelle_df, Bundesländer_Bund_7Tage_Inzidenz_Tabelle_df,   by = "Bundesland")
+
+
+Bundesländer_Bund_Tabelle_df%>%
+  kbl() %>% 
+  kable_material() %>% 
+    row_spec(17,
+           bold = T,
+           background = "#DCDCDC") %>% 
+  kable_styling("hover",
+                full_width = F,
+                position = "left",
+                fixed_thead = T,
+                html_font = "helvetica",
+                font_size = 16)
+
+
+```
+
+
+
+### Städte
+```{r include=FALSE}
+RKI_Corona_Landkreise <- read_csv("data/RKI_Corona_Landkreise.csv")
+Einwohner_Bundesland_Landkreise_df = RKI_Corona_Landkreise %>% 
+  select(RS, EWZ, EWZ_BL) %>% 
+  rename(IdLandkreis = RS,
+         EWZ_LK = EWZ) 
+```
+
+
+```{r}
+#mooving sum
+ms <- function(x, n = 7) {
+    zoo::rollapply(x,n,sum,na.pad = T,align = "right")
+  }
+
+
+Städte = c("SK Darmstadt","LK Darmstadt-Dieburg", "SK Frankfurt am Main","SK Düsseldorf","LK Offenbach")
+
+Städte_Tabelle_df = RKI_COVID19 %>%
+  mutate(Fallzahl = ifelse(NeuerFall %in% c(0,1),AnzahlFall,0),
+         Fallzahl_neu = ifelse(NeuerFall %in% c(-1,1),AnzahlFall,0),
+         Todesfall = ifelse(NeuerTodesfall %in% c(0,1),AnzahlTodesfall,0),
+         Todesfall_neu = ifelse(NeuerTodesfall %in% c(-1,1),AnzahlTodesfall,0),
+         Genesen = ifelse(NeuGenesen %in% c(0,1),AnzahlGenesen,0),
+         Genesen_neu = ifelse(NeuGenesen %in% c(-1,1),AnzahlGenesen,0)) %>% 
+  group_by(Meldedatum, Landkreis,IdLandkreis) %>% 
+  summarize(Fallzahl = sum(Fallzahl),
+            Fallzahl_neu = sum(Fallzahl_neu),
+            Todesfall = sum(Todesfall),
+            Todesfall_neu = sum(Todesfall_neu),
+            Genesen = sum(Genesen),
+            Genesen_neu = sum(Genesen_neu)) %>%
+    filter(Landkreis %in% Städte) %>%
+  ungroup() %>% 
+  group_by(Landkreis,IdLandkreis) %>% 
+  complete(Meldedatum = seq.Date(min(MinDatum), max(MaxDatum), by="day")) %>% 
+  replace(is.na(.), 0) %>% 
+  mutate(SiebenTageSumme = ms(Fallzahl)) %>% 
+  ungroup() %>% 
+  group_by(Landkreis,IdLandkreis) %>% 
+  summarise(Fallzahl = sum(Fallzahl),
+            Fallzahl_neu = sum(Fallzahl_neu),
+            Todesfall = sum(Todesfall),
+            Todesfall_neu = sum(Todesfall_neu),
+            Genesen = sum(Genesen),
+            Genesen_neu = sum(Genesen_neu),
+            SiebenTageSumme = last(SiebenTageSumme)) %>% 
+  left_join(., Einwohner_Bundesland_Landkreise_df,   by = "IdLandkreis") %>% 
+  mutate(SiebenTageInzidenz = round((SiebenTageSumme/EWZ_LK)*100000,1))
+
+
+Städte_Tabelle_df %>% 
+  select(Landkreis, Fallzahl_neu, Fallzahl,SiebenTageSumme,SiebenTageInzidenz) %>% 
+  rename("Differenz zum Vortag" = Fallzahl_neu,
+         Anzahl = Fallzahl,
+         "Fälle in den letzen 7 Tagen" = SiebenTageSumme,
+         "7 Tage Inzidenz" = SiebenTageInzidenz) %>% 
+      kbl() %>% 
+  kable_material() %>% 
+  kable_styling("hover",
+                full_width = F,
+                position = "left",
+                fixed_thead = T,
+                html_font = "helvetica",
+                font_size = 16)
+```
+
+
+Grafiken {data-icon="fa-bar-chart"}
+===================================== 
+
+Row {data-height=500}
+-----------------------------------------------------------------------
+
+### Bundesländer
+
+
+```{r}
+Bund_BL_Gesamt = RKI_COVID19 %>%
+  filter(NeuerFall %in% c(0, 1),
+         Meldedatum > Sys.Date() - 300) %>%
+  rename(date = Meldedatum) %>%
+  cross_by_dimensions(Bundesland) %>%
+  cross_by_periods(c("day", "week", "month", "quarter")) %>%
+  summarize(AnzahlFall = sum(AnzahlFall))
+
+
+#Moving Avarage Funktion 
+  ma <- function(x, n = 7) {
+    stats::filter(x, rep(1 / n, n), sides = 2)
+  }
+
+ggplotly(
+Bund_BL_Gesamt %>%
+  filter(period == "day",
+  Bundesland != "All") %>%
+  mutate(maAnzahlFall = ma(AnzahlFall)) %>% 
+  ggplot(aes(date, AnzahlFall, fill = Bundesland)) +
+  geom_col() +
+  geom_line(
+    aes(date, maAnzahlFall,col=Bundesland),
+    color = "black",
+    alpha = .9,
+    size = 0.8)+
+  
+  #Lockdown
+  geom_vline(xintercept = as.numeric(Lockdown2),
+             color = "#000066",
+             size = 0.3,
+             alpha = 0.9) +
+  
+  #Beschriftung und Zoomen
+  scale_x_date(
+    date_breaks = "1 month",
+    date_labels = "%W") +
+  coord_cartesian(xlim = c(Sys.Date() - 90, NA),
+                  ylim = c(0, NA)) +
+      labs(x = "",
+       y = "Fallzahlen",
+       title = "")+
+  theme(legend.position = "none")+
+  
+  facet_wrap(~ Bundesland, ncol=4, scales="free_y")+
+  theme_fivethirtyeight()+
+  theme(legend.position = "none")
+)
+
+```
+
+### Fallzahlen Deutschland
+```{r}
+
+ma <- function(x, n = 7) {
+  stats::filter(x, rep(1 / n, n), sides = 2)
+}
+
+Bund = RKI_COVID19 %>%
+  filter(NeuerFall %in% c(0, 1)) %>%
+  group_by(Meldedatum) %>%
+  summarise(AnzahlFall = sum(AnzahlFall)) %>%
+  ungroup() %>%
+  mutate(ma_AnzahlFall = round(ma(AnzahlFall))) %>%
+  mutate(max_AnzahlFall = ifelse(AnzahlFall == max(AnzahlFall), "1", "0")) %>% 
+  ggplot(aes(Meldedatum, AnzahlFall, fill = max_AnzahlFall)) +
+  geom_col(alpha = 1,
+           width = 0.8) +
+  scale_fill_manual(values = c("1" = "red", "0" = "black"), guide = FALSE) +
+  geom_vline(xintercept = as.numeric(Lockdown1),
+             color = "#000066",
+             size = 0.5,
+             alpha = 0.9 ) +
+  geom_vline(xintercept = as.numeric(Lockdown2),
+             color = "#000066",
+             size = 0.5,
+             alpha = 0.9) +
+  geom_line(aes(Meldedatum, ma_AnzahlFall),
+            color = "red",
+            alpha = .8,
+            size = 0.95 ) +
+  scale_x_date(date_breaks = "1 month",
+               date_labels = "%b %y") +
+  coord_cartesian(xlim = c(as.Date("2020-03-10"), NA)) +
+  scale_y_continuous(expand = c(0, 0))+
+  theme(legend.position = "none")
+
+ggplotly(Bund)
+```
+
+
+
+Row {data-height=500}
+-----------------------------------------------------------------------
+### 7 Tage Inzidenzts Graph
+
+
+```{r}
+BL_Tabelle_df = RKI_COVID19 %>%
+  rename(date = Meldedatum) %>%
+  mutate(Fallzahl = ifelse(NeuerFall %in% c(0,1),AnzahlFall,0),
+         Fallzahl_neu = ifelse(NeuerFall %in% c(-1,1),AnzahlFall,0)) %>% 
+  group_by(date, Bundesland) %>% 
+  summarize(Fallzahl = sum(Fallzahl),
+            Fallzahl_neu = sum(Fallzahl_neu)) %>%
+  ungroup() %>% 
+  group_by(Bundesland) %>% 
+  complete(date = seq.Date(min(MinDatum), max(MaxDatum), by="day")) %>% 
+  replace(is.na(.), 0) %>% 
+  mutate(SiebenTageSumme = ms(Fallzahl)) %>% 
+  ungroup() %>% 
+  cross_by_dimensions(Bundesland) %>%
+  mutate(Bundesland = ifelse(Bundesland=="All","Gesamt",Bundesland)) %>% 
+  group_by(Bundesland,date) %>% 
+  summarise(Fallzahl = sum(Fallzahl),
+            Fallzahl_neu = sum(Fallzahl_neu),
+            SiebenTageSumme = sum(SiebenTageSumme)) %>% 
+  left_join(., Einwohner_Bundesland_df,   by = "Bundesland") %>% 
+  mutate(SiebenTageInzidenz = round((SiebenTageSumme/Einwohner)*100000,1)) %>% 
+  ungroup() %>% 
+  mutate(Bundesland = fct_reorder(Bundesland,Einwohner,.desc = F)) 
+
+
+ggplotly(
+  
+BL_Tabelle_df %>%
+  filter(date > Sys.Date()-33) %>%
+    ggplot(aes(date, SiebenTageInzidenz,color = Bundesland, size = Bundesland))+
+  geom_line()+
+  scale_size_manual(values = c(.5, .5, .5, .5, .5, .5, .5, .5, .5, .5, .5, .5, .5, .5, .5, .5, 1.5))+
+  scale_color_manual(values = c("#0000ff","#663399","#99cc66","#0099ff","#666666","#66cccc","#ff9933","#cc99cc","#000000","#ff0000","#cc3333","#ffcc33","#ff99ff","#cccc99","#009966","#cc66ff", "#cc6600"))+
+   scale_x_date(
+    date_breaks = "3 day",
+    date_labels = "%d.%m")+ 
+  theme(axis.text.x = element_text(angle = 45)) 
+  
+
+)
+
+```
+
+
+
+
+### Coronafallzahlen pro Woche
+
+```{r}
+
+ggplotly(
+Bund_BL_Gesamt %>%
+  filter(period == "week",
+         Bundesland == "All") %>%
+  ggplot(aes(date, AnzahlFall, fill = Bundesland)) +
+  scale_fill_manual(values = c("All" = "black"), guide = FALSE) +
+  geom_col()+
+    labs(x = "",
+         y = "Fallzahlen",
+         title = "")+
+  scale_x_date(date_breaks = "1 month",
+               date_labels = "%b %y") +
+  coord_cartesian(xlim = c(as.Date("2020-03-10"), NA)) +
+  scale_y_continuous(expand = c(0, NA))+
+  theme(legend.position = "none")
+
+)
+
+```
+
+
+
+```{r eval=FALSE, include=FALSE}
+RKI_Corona_Landkreise <- read_csv(here("data/RKI_Corona_Landkreise.csv"))
+Einwohner_Bundesland_Landkreise_df = RKI_Corona_Landkreise %>% 
+  select(RS, EWZ, EWZ_BL) %>% 
+  rename(IdLandkreis = RS,
+         EWZ_LK = EWZ) 
+
+
+#mooving sum
+ms <- function(x, n = 7) {
+    zoo::rollapply(x,n,sum,na.pad = T,align = "right")
+  }
+
+
+Städte = c("SK Darmstadt","LK Darmstadt-Dieburg", "SK Frankfurt am Main","SK Düsseldorf","LK Offenbach")
+
+RKI_COVID19 %>%
+  mutate(Fallzahl = ifelse(NeuerFall %in% c(0,1),AnzahlFall,0),
+         Fallzahl_neu = ifelse(NeuerFall %in% c(-1,1),AnzahlFall,0),
+         Todesfall = ifelse(NeuerTodesfall %in% c(0,1),AnzahlTodesfall,0),
+         Todesfall_neu = ifelse(NeuerTodesfall %in% c(-1,1),AnzahlTodesfall,0),
+         Genesen = ifelse(NeuGenesen %in% c(0,1),AnzahlGenesen,0),
+         Genesen_neu = ifelse(NeuGenesen %in% c(-1,1),AnzahlGenesen,0)) %>% 
+  group_by(Meldedatum, Landkreis,IdLandkreis) %>% 
+  summarize(Fallzahl = sum(Fallzahl),
+            Fallzahl_neu = sum(Fallzahl_neu),
+            Todesfall = sum(Todesfall),
+            Todesfall_neu = sum(Todesfall_neu),
+            Genesen = sum(Genesen),
+            Genesen_neu = sum(Genesen_neu)) %>%
+    filter(Landkreis %in% Städte) %>%
+  ungroup() %>% 
+  group_by(Landkreis,IdLandkreis) %>% 
+  complete(Meldedatum = seq.Date(min(MinDatum), max(MaxDatum), by="day")) %>% 
+  replace(is.na(.), 0) %>% 
+  mutate(SiebenTageSumme = ms(Fallzahl)) %>% 
+  ungroup() %>% 
+  group_by(Landkreis,IdLandkreis) %>% 
+  summarise(Fallzahl = sum(Fallzahl),
+            Fallzahl_neu = sum(Fallzahl_neu),
+            Todesfall = sum(Todesfall),
+            Todesfall_neu = sum(Todesfall_neu),
+            Genesen = sum(Genesen),
+            Genesen_neu = sum(Genesen_neu),
+            SiebenTageSumme = last(SiebenTageSumme)) %>% 
+  left_join(., Einwohner_Bundesland_Landkreise_df,   by = "IdLandkreis") %>% 
+  mutate(SiebenTageInzidenz = round((SiebenTageSumme/EWZ_LK)*100000,1)) %>% 
+  select(Landkreis, Fallzahl_neu,SiebenTageSumme,SiebenTageInzidenz) %>% 
+      kbl() %>% 
+  kable_material() %>% 
+  kable_styling("hover",
+                full_width = F,
+                position = "left",
+                fixed_thead = T,
+                html_font = "helvetica",
+                font_size = 16)
+  
+
+#Für GitHub Test
+```
+
