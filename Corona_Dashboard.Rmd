@@ -72,6 +72,11 @@ if (file.exists(paste0(here("data/RKI/RKI_COVID19_"), Sys.Date(), ".csv"))) {
 
 ```
 
+```{r}
+NummernMitPunkt <- function(x, digits=0) {
+  return(formatC(x, format="f", big.mark = ".", decimal.mark   = ",",digits))
+}
+```
 
 ```{r include=FALSE}
 if (!exists("RKI_COVID19")) {
@@ -141,7 +146,7 @@ Bund_ZumVortag_df = RKI_COVID19 %>%
             "Differenz zum Vortag" = sum(AnzahlFall))
 
 valueBox(
-  Bund_ZumVortag_df$`Differenz zum Vortag`,
+  NummernMitPunkt(Bund_ZumVortag_df$`Differenz zum Vortag`),
   icon = "fa-plus",
   caption = "Neuinfektionen Gesamt",
   color = ifelse(Bund_ZumVortag_df$`Differenz zum Vortag` == max(Neufindektion_Datum_df$Neuinfektionen), "warning", "primary"))
@@ -157,7 +162,10 @@ Bund_Fälle_Gesamt_df = RKI_COVID19 %>%
   summarise(Bundesland = "Gesamt",
             Anzahl = sum(AnzahlFall))
 
-valueBox(Bund_Fälle_Gesamt_df$Anzahl, icon = "fa-stethoscope",caption = "Anzahl aller Fälle ",color = "info")
+valueBox(NummernMitPunkt(Bund_Fälle_Gesamt_df$Anzahl), 
+         icon = "fa-stethoscope",
+         caption = "Anzahl aller Fälle ",
+         color = "info")
 
 ```
 
@@ -195,7 +203,7 @@ VorletzteWocheInzidenz = round(VorletzteWocheInzidenz/(EinwohnerzahlBund/100000)
 
 
 
-valueBox(LetzteWocheInzidenz, 
+valueBox(NummernMitPunkt(LetzteWocheInzidenz,digits = 1), 
          icon = ifelse(LetzteWocheInzidenz>VorletzteWocheInzidenz,"fa-arrow-up","fa-arrow-down"),
          caption = "7 Tage Inzidenz", 
          color = ifelse(LetzteWocheInzidenz>VorletzteWocheInzidenz,"#cd6689","#66CDAA"))
@@ -205,7 +213,7 @@ valueBox(LetzteWocheInzidenz,
 
 ### Durchseuchung 
 ```{r}
-valueBox(round(Bund_Fälle_Gesamt_df$Anzahl/EinwohnerzahlBund*100,2),
+valueBox(NummernMitPunkt(round(Bund_Fälle_Gesamt_df$Anzahl/EinwohnerzahlBund*100,2),digits = 2),
          icon = "fa-percent",
          caption = "Durchseuchung", 
          color = "#66cccc")
@@ -294,7 +302,11 @@ Bundesländer_Bund_Tabelle_df = full_join(Bundesländer_Bund_Tabelle_df, Bundesl
 
 
 Bundesländer_Bund_Tabelle_df%>%
-  kbl() %>% 
+    mutate(`Differenz zum Vortag`  = NummernMitPunkt(`Differenz zum Vortag` ),
+         Anzahl = NummernMitPunkt(Anzahl),
+         `Fälle in den letzen 7 Tagen` = NummernMitPunkt(`Fälle in den letzen 7 Tagen`),
+         `7 Tage Inzidenz` = NummernMitPunkt(`7 Tage Inzidenz`,digits = 1)) %>% 
+  kbl(align = c("l","r","r","r","r")) %>% 
   kable_material() %>% 
     row_spec(17,
            bold = T,
@@ -365,11 +377,16 @@ Städte_Tabelle_df = RKI_COVID19 %>%
 
 Städte_Tabelle_df %>% 
   select(Landkreis, Fallzahl_neu, Fallzahl,SiebenTageSumme,SiebenTageInzidenz) %>% 
+  mutate(Fallzahl = NummernMitPunkt(Fallzahl),
+         Fallzahl_neu = NummernMitPunkt(Fallzahl_neu),
+         SiebenTageSumme = NummernMitPunkt(SiebenTageSumme),
+         SiebenTageInzidenz = NummernMitPunkt(SiebenTageInzidenz,digits = 1)) %>% 
+  
   rename("Differenz zum Vortag" = Fallzahl_neu,
          Anzahl = Fallzahl,
          "Fälle in den letzen 7 Tagen" = SiebenTageSumme,
          "7 Tage Inzidenz" = SiebenTageInzidenz) %>% 
-      kbl() %>% 
+  kbl(align = c("l","r","r","r","r")) %>% 
   kable_material() %>% 
   kable_styling("hover",
                 full_width = F,
