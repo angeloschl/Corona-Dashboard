@@ -44,16 +44,17 @@ i = 0
 !file.exists(paste0(here("data/RKI/RKI_COVID19_"), Sys.Date(), ".csv"))
 
 if (!file.exists(paste0(here("data/RKI/RKI_COVID19_"), Sys.Date(), ".csv"))) {
-  download.file(
-    url,
-    destfile = paste0(
-      here("data/RKI/RKI_COVID19_"),
-      Sys.Date(),
-      ".csv"))
-
+recount::download_retry(
+  url,
+  destfile = paste0(
+    here("data/RKI/RKI_COVID19_"),
+    Sys.Date(),
+    ".csv"),
+  N.TRIES = 100)
+  
   #Wenn es einen neuen RKI Datensatz gibt, wird Zähler i auf i=1 gesetzt. Damit wird das Markdownskript kompiliert.
   i = 1
-}
+} 
 
 #Datensatz vom Vortag zippen und Originaldatei löschen. 
 if (file.exists(paste0(here("data/RKI/RKI_COVID19_"), Sys.Date(), ".csv"))) {
@@ -79,6 +80,8 @@ NummernMitPunkt <- function(x, digits=0) {
 ```
 
 ```{r include=FALSE}
+
+# wenn schon in der der Environment geladen, nicht erneut laden.
 if (!exists("RKI_COVID19")) {
   RKI_COVID19 <-
     read_csv(paste0(here("data/RKI/RKI_COVID19_"), Sys.Date(), ".csv")) %>%

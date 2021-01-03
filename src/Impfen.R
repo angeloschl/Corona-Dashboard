@@ -21,7 +21,7 @@ is_in_dir <- !file.exists(paste0(here("data/RKI_Impf/working/RKI_Impfquote_COVID
 # Wenn heutiger Datensatz noch nich existiert, if befehl ausführen. Datensatz laden und überprüfen ober er aktuell ist in dem ermit den vorherigen Daten verglichen wird. ist er neu wird er umbenannt. ist er halt passiert nichts. 
 if (is_in_dir) {
   # Neuen Daten laden
-  download.file(url, destfile = here("data/RKI_Impf/working/geladen.xlsx"))
+  recount::download_retry(url, destfile = here("data/RKI_Impf/working/geladen.xlsx"),N.TRIES = 100)
   
   files <- list.files(here("data/RKI_Impf/working/")) %>%
     .[!. %in% "geladen.xlsx"] %>% # . Punkt steht in diesem Fall für files
@@ -64,7 +64,7 @@ if (is_in_dir) {
 # Daten aus dem aktuellen xlsx lesen. Nur Bundesländer ohne gesmat (row 1:16). Datum von Gestern (Tag der Imfpung) hinzugügen
 RKI_Impf_heute <- read_excel(paste0(here("data/RKI_Impf/working/RKI_Impfquote_COVID19_"), Sys.Date(), ".xlsx"),sheet = 2, n_max = 16) 
 
-
+# clean Data
 RKI_Impf_heute <- RKI_Impf_heute %>%
   clean_names() %>%
   mutate(date = Sys.Date()-1) %>% 
@@ -101,6 +101,4 @@ write.csv(RKI_Impf_gesamt,
 #   ggplot(aes(x = date , y = differenz_zum_vortag)) + 
 #   geom_col()
 # )
-
-# Spielwiese --------------------------------------------------------------
 
