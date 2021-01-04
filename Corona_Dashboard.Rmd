@@ -30,46 +30,9 @@ library(here)
 theme_set(theme_light())
 ```
 
-
-```{r, include=FALSE}
-rm(list = ls())  #Loescht alle Vorherigen Variablen und Daten aus R
-#setwd(here())
-
-url = "https://www.arcgis.com/sharing/rest/content/items/f10774f1c63e40168479a1feb6c7ca74/data"
-
-
-#Zähler für R-Markdown initialisieren. Nur wenn i=1 ist, wird Markdown erstellt
-i = 0
-
-!file.exists(paste0(here("data/RKI/RKI_COVID19_"), Sys.Date(), ".csv"))
-
-if (!file.exists(paste0(here("data/RKI/RKI_COVID19_"), Sys.Date(), ".csv"))) {
-recount::download_retry(
-  url,
-  destfile = paste0(
-    here("data/RKI/RKI_COVID19_"),
-    Sys.Date(),
-    ".csv"),
-  N.TRIES = 100)
-  
-  #Wenn es einen neuen RKI Datensatz gibt, wird Zähler i auf i=1 gesetzt. Damit wird das Markdownskript kompiliert.
-  i = 1
-} 
-
-#Datensatz vom Vortag zippen und Originaldatei löschen. 
-if (file.exists(paste0(here("data/RKI/RKI_COVID19_"), Sys.Date(), ".csv"))) {
-  setwd(here("data/RKI/"))
-  
-  zip(
-    zipfile = paste0(here("data/RKI/RKI_COVID19_"), Sys.Date() - 1,""),
-    files = paste0("RKI_COVID19_", Sys.Date() - 1, ".csv"))
-  
-    #Wenn .zip datei existiert, .csv löschen
-    if (file.exists(paste0(here("data/RKI/RKI_COVID19_"), Sys.Date() - 1, ".zip"))) {
-      file.remove(paste0(here("data/RKI/RKI_COVID19_"), Sys.Date() - 1, ".csv"))
-    }
-  setwd(here())
-}
+```{r}
+source(here("src/Fallzahlen_laden.R"))
+source(here("src/Impfen.R"))
 
 ```
 
@@ -84,13 +47,19 @@ NummernMitPunkt <- function(x, digits=0) {
 # wenn schon in der der Environment geladen, nicht erneut laden.
 if (!exists("RKI_COVID19")) {
   RKI_COVID19 <-
-    read_csv(paste0(here("data/RKI/RKI_COVID19_"), Sys.Date(), ".csv")) %>%
+    read_csv(paste0(here("data/RKI/working/RKI_COVID19_"), Sys.Date(), ".csv")) %>%
     mutate(
       Meldedatum = ymd(as.Date(Meldedatum)),
       Refdatum = ymd(as.Date(Refdatum)),
       Datenstand = as_date(dmy_hm(Datenstand))) %>%
     arrange(desc(Meldedatum))
 }
+
+if (!exists("Neufindektion_Datum_df")) {
+Neufindektion_Datum_df <- read_csv(here("data/Erstellt/Neufindektion_Datum_df.csv"))
+}
+
+
 
 Lockdown1 = as.Date("2020-03-22")
 Lockdown2 = as.Date("2020-11-02")
@@ -109,31 +78,6 @@ Einwohner_Bundesland_Landkreise_df = RKI_Corona_Landkreise %>%
 
 ```
 
-
-
-```{r}
-Neufindektion_Datum_df <- read_csv(here("data/Erstellt/Neufindektion_Datum_df.csv"))
-
-if (all(max(RKI_COVID19$Meldedatum) + 1 != Neufindektion_Datum_df$Datum)) {
-  #Datum in Datumschreiben. Maximales Datum aus Datensatz +1 rechnen.
-  #Im Datenframe eine neue Zeile anlegen [+1,1]
-  Neufindektion_Datum_df[nrow(Neufindektion_Datum_df) + 1, 1] = max(RKI_COVID19$Meldedatum) + 1
-  
-  Neufindektion_Datum_df[nrow(Neufindektion_Datum_df), 2] = RKI_COVID19 %>%
-    filter(NeuerFall %in% c(-1, 1)) %>%
-    summarise(AnzahlFall = sum(AnzahlFall)) %>%
-    as.numeric()
-  
-  Neufindektion_Datum_df = Neufindektion_Datum_df %>%
-    arrange(desc(Datum))
-  
-  
-  write.csv(Neufindektion_Datum_df,
-            here("data/Erstellt/Neufindektion_Datum_df.csv"),
-            row.names = F)
-}
-
-```
 Tagesaktuelle Zahlen   {data-icon="fa-sticky-note"}
 ===================================== 
 
@@ -220,15 +164,6 @@ valueBox(NummernMitPunkt(round(Bund_Fälle_Gesamt_df$Anzahl/EinwohnerzahlBund*10
          icon = "fa-percent",
          caption = "Durchseuchung", 
          color = "#66cccc")
-```
-
-
-```{r eval=FALSE, include=FALSE}
-gauge(round(Bund_Fälle_Gesamt_df$Anzahl/EinwohnerzahlBund*100,2), 
-      min = 0, 
-      max = 100, 
-      symbol = '%',
-      gaugeSectors(success = c(70, 100), warning = c(60, 70), danger = c(0, 59)))
 ```
 
 Row {data-height=875}
