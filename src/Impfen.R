@@ -20,7 +20,7 @@ is_in_dir <- !file.exists(paste0(here("data/RKI_Impf/working/RKI_Impfquote_COVID
 # Wenn heutiger Datensatz noch nich existiert, if befehl ausführen. Datensatz laden und überprüfen ober er aktuell ist in dem ermit den vorherigen Daten verglichen wird. ist er neu wird er umbenannt. ist er halt passiert nichts. 
 if (is_in_dir) {
   # Neuen Daten laden
-  recount::download_retry(url, destfile = here("data/RKI_Impf/working/geladen.xlsx"),N.TRIES = 100)
+  curl::curl_download(url, destfile = here("data/RKI_Impf/working/geladen.xlsx"))
   
   RKI_Impf_geladen <- read_excel(here("data/RKI_Impf/working/geladen.xlsx"),sheet = 2)
   
