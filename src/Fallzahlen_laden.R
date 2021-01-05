@@ -22,7 +22,7 @@ if (is_in_dir) {
   RKI_geladen <- read_csv(here("data/RKI/original/geladen.csv"))
 
 
-  # Nur .csv datein, da die anderen schon gezipped wurden. Sollte eigenltich immer nur eine datei sein.
+  # Nur .csv datein, da die anderen schon gezipped wurden. Sollte eigentlich immer nur eine datei sein.
   files <- list.files(here("data/RKI/working/")) %>%
     .[grepl(".*\\.csv", .)]
 
@@ -45,7 +45,7 @@ if (is_in_dir) {
       here("data/RKI/original/geladen.csv"),
       paste0(here("data/RKI/working/RKI_COVID19_"), Sys.Date(), ".csv")
     )
-    message("Neue Daten geladen")
+    message("Infektionszahlen:  Neue Daten geladen")
 
 
 
@@ -65,7 +65,7 @@ if (is_in_dir) {
         file.remove(paste0(here("data/RKI/working/RKI_COVID19_"), Sys.Date() - 1, ".csv"))
       }
       setwd(here())
-      message("Alter Datensatz gezippt")
+      message("Infektionszahlen:  Alter Datensatz gezippt")
     }
 
     Neufindektion_Datum_df <- read_csv(here("data/Erstellt/Neufindektion_Datum_df.csv"))
@@ -109,7 +109,7 @@ if (is_in_dir) {
           here("data/Erstellt/Neufindektion_Datum_df.csv"),
           row.names = F
         )
-        message("Gesamtzahl der Neuinfektionen von heute wurden ergänzt")
+        message("Infektionszahlen: Gesamtzahl der Neuinfektionen von heute wurden ergänzt")
       }
       
       
@@ -122,9 +122,9 @@ if (is_in_dir) {
   
   if (any(a) == TRUE) {
     file.remove(here("data/RKI/original/geladen.csv"))
-    message("Keine Neue Daten")
+    message("Infektionszahlen: Keine Neue Daten")
   }
   
 } else {
-  message("Daten existieren schon")
+  message("Infektionszahlen: Daten existieren schon")
 }
