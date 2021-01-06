@@ -1,5 +1,5 @@
 ---
-title: "Corona Dashboard"
+title: "Corona Dashboard - `r Sys.Date()`" 
 output: 
   flexdashboard::flex_dashboard:
     orientation: rows
@@ -12,7 +12,6 @@ editor_options:
 library(flexdashboard)
 library(readr)
 library(dplyr)
-library(psych)
 library(ggplot2)
 library(tidyverse)
 library(magrittr)
@@ -21,12 +20,13 @@ library(tidyr)
 library(zoo)
 library(plotly)
 library(wesanderson)
-library(EpiEstim)
 library(tidymetrics)
 library(kableExtra)
 library(ggthemes)
 library(gghighlight)
 library(here)
+library(janitor)
+library(glue)
 theme_set(theme_light())
 ```
 
@@ -58,6 +58,12 @@ if (!exists("RKI_COVID19")) {
 if (!exists("Neufindektion_Datum_df")) {
 Neufindektion_Datum_df <- read_csv(here("data/Erstellt/Neufindektion_Datum_df.csv"))
 }
+
+if (!exists("RKI_Impf")) {
+RKI_Impf <- read_csv(here("data/RKI_Impf/final/RKI_Impf_gesamt.csv"))
+}
+
+
 
 
 
@@ -111,7 +117,7 @@ Bund_Fälle_Gesamt_df = RKI_COVID19 %>%
 
 valueBox(NummernMitPunkt(Bund_Fälle_Gesamt_df$Anzahl), 
          icon = "fa-stethoscope",
-         caption = "Anzahl aller Fälle ",
+         caption = "Anzahl aller Infizierter",
          color = "info")
 
 ```
@@ -159,14 +165,68 @@ valueBox(NummernMitPunkt(LetzteWocheInzidenz,digits = 1),
 ```
 
 ### Durchseuchung 
-```{r}
-valueBox(NummernMitPunkt(round(Bund_Fälle_Gesamt_df$Anzahl/EinwohnerzahlBund*100,2),digits = 2),
-         icon = "fa-percent",
-         caption = "Durchseuchung", 
-         color = "#66cccc")
+```{r Durchseuchung}
+valueBox(
+  glue::glue("{NummernMitPunkt(round(Bund_Fälle_Gesamt_df$Anzahl/EinwohnerzahlBund*100,2),digits = 2)}%"),
+  icon = "fa-percent",
+  caption = "Durchseuchung",
+  color = "#66cccc")
 ```
 
-Row {data-height=875}
+
+Row {data-height=125}
+-----------------------------------------------------------------------
+
+### Neue Impfungen Gestern
+```{r NeueImpfungenGestern}
+RKI_Impf_gestern <- RKI_Impf %>%
+  group_by(date) %>% 
+  summarize(impfungen_kumulativ = sum(impfungen_kumulativ,na.rm = TRUE),
+            differenz_zum_vortag = sum(differenz_zum_vortag,na.rm = TRUE)) %>% 
+  arrange(desc(date)) %>% 
+  .[1,] 
+
+  valueBox(
+  NummernMitPunkt(RKI_Impf_gestern$differenz_zum_vortag),
+  icon = "fa-plus",
+  caption = glue::glue("Neu geimpft (Stand {RKI_Impf_gestern$date +1})"),
+  color = "primary")
+```
+
+### Anzahl aller Geimpften
+```{r AnzahlallerGeimpften}
+RKI_Impf_gestern <- RKI_Impf %>%
+  group_by(date) %>% 
+  summarize(impfungen_kumulativ = sum(impfungen_kumulativ,na.rm = TRUE)) %>% 
+  arrange(desc(date)) %>% 
+  .[1,] 
+
+  valueBox(
+  NummernMitPunkt(RKI_Impf_gestern$impfungen_kumulativ),
+  icon = "fa-thumbs-o-up",
+  caption = glue::glue("Anzahl aller Geimpften (Stand {RKI_Impf_gestern$date +1})"),
+  color = "primary")
+```
+
+
+### Impfqoute
+```{r Impfqoute}
+RKI_Impf_gestern <- RKI_Impf %>%
+  group_by(date) %>% 
+  summarize(impfungen_kumulativ = sum(impfungen_kumulativ,na.rm = TRUE)) %>% 
+  arrange(desc(date)) %>% 
+  .[1,] 
+
+valueBox(
+  glue::glue("{NummernMitPunkt(round(RKI_Impf_gestern$impfungen_kumulativ/EinwohnerzahlBund*100,2),digits = 2)}%"),
+  icon = "fa-percent",
+  caption = glue::glue("Anzahl aller Geimpften (Stand {RKI_Impf_gestern$date +1})"),
+  color = "#66cccc")
+```
+
+
+
+Row {data-height=750}
 -----------------------------------------------------------------------
 
 ### Bundesländer
