@@ -1,7 +1,7 @@
-library(here)
-library(janitor)
-library(tidyverse)
-library(lubridate)
+suppressMessages(library(here))
+suppressMessages(library(janitor))
+suppressMessages(library(tidyverse))
+suppressMessages(library(lubridate))
 
 
 
@@ -16,10 +16,9 @@ is_in_dir <- !file.exists(paste0(here("data/RKI/working/RKI_COVID19_"), Sys.Date
 if (is_in_dir) {
   # Neuen Daten laden
   curl::curl_download(url,
-    destfile = here("data/RKI/original/geladen.csv")
-  )
+    destfile = here("data/RKI/original/geladen.csv"))
 
-  RKI_geladen <- read_csv(here("data/RKI/original/geladen.csv"))
+  RKI_geladen <- suppressMessages(read_csv(here("data/RKI/original/geladen.csv")))
 
 
   # Nur .csv datein, da die anderen schon gezipped wurden. Sollte eigentlich immer nur eine datei sein.
@@ -28,12 +27,12 @@ if (is_in_dir) {
 
 
 
-  # Vergleichen ob die der neu geladene Datensatz geladen.xlsx gleich mit den schon im Ordner enthaltenen ist. a vector wird initialisiert auf NA.
+  # Vergleichen ob die der neu geladene Datensatz geladen.xlsx gleich mit den schon im Ordner enthaltenen ist. 'a' Variable wird initialisiert auf NA.
   a <- NA
   for (i in 1:length(files)) {
-    RKI_alt <- read_csv(paste0(here("data/RKI/working/", files[i])))
+    RKI_alt <- suppressMessages(read_csv(paste0(here("data/RKI/working/", files[i]))))
 
-    a[i] <- all_equal(RKI_alt, RKI_geladen) == TRUE
+    a[i] <- suppressMessages(all_equal(RKI_alt, RKI_geladen)) == TRUE
   }
 
 
@@ -54,10 +53,12 @@ if (is_in_dir) {
       !file.exists(paste0(here("data/RKI/working/RKI_COVID19_"), Sys.Date() - 1, ".zip"))
     ) {
       setwd(here("data/RKI/working/"))
-
-      zip(
-        zipfile = paste0(here("data/RKI/working/RKI_COVID19_"), Sys.Date() - 1, ""),
-        files = paste0("RKI_COVID19_", Sys.Date() - 1, ".csv")
+      
+      suppressMessages(
+        zip(
+          zipfile = paste0(here("data/RKI/working/RKI_COVID19_"), Sys.Date() - 1, ""),
+          files = paste0("RKI_COVID19_", Sys.Date() - 1, ".csv")
+        )
       )
 
       # Wenn .zip datei existiert, .csv löschen
@@ -68,7 +69,7 @@ if (is_in_dir) {
       message("Infektionszahlen:  Alter Datensatz gezippt")
     }
 
-    Neufindektion_Datum_df <- read_csv(here("data/Erstellt/Neufindektion_Datum_df.csv"))
+    Neufindektion_Datum_df <- suppressMessages(read_csv(here("data/Erstellt/Neufindektion_Datum_df.csv")))
 
 
 
@@ -78,7 +79,7 @@ if (is_in_dir) {
     ) {
       if (!exists("RKI_COVID19")) {
         RKI_COVID19 <-
-          read_csv(paste0(here("data/RKI/working/RKI_COVID19_"), Sys.Date(), ".csv")) %>%
+          suppressMessages(read_csv(paste0(here("data/RKI/working/RKI_COVID19_"), Sys.Date(), ".csv"))) %>%
           mutate(
             Meldedatum = ymd(as.Date(Meldedatum)),
             Refdatum = ymd(as.Date(Refdatum)),
