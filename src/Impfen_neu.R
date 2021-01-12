@@ -7,12 +7,11 @@ suppressMessages(library(janitor))
 suppressMessages(library(tidyverse))
 
 
-
 url <- "https://www.rki.de/DE/Content/InfAZ/N/Neuartiges_Coronavirus/Daten/Impfquotenmonitoring.xlsx;jsessionid=191B8B9B966E7F09BCCCF72ABE990854.internet081?__blob=publicationFile"
 
 # Daten vom Server holen und in RKI_Impf_geladen schreiben
 curl::curl_download(url, destfile = here("data/RKI_Impf/working/geladen.xlsx"))
-RKI_Impf_geladen <- read_excel(here("data/RKI_Impf/working/geladen.xlsx"), sheet = 2)
+RKI_Impf_geladen <- suppressMessages(read_excel(here("data/RKI_Impf/working/geladen.xlsx"), sheet = 2))
 
 
 
@@ -25,7 +24,7 @@ if (is_in_dir == TRUE) {
   # Testen ob der Datensatz aktualisiert wurde
   # Also geladen mit heute vergleichen
   
-  RKI_Impf_heute <- read_excel(paste0(here("data/RKI_Impf/working/RKI_Impfquote_COVID19_"), Sys.Date(), ".xlsx"), sheet = 2)
+  RKI_Impf_heute <- suppressMessages(read_excel(paste0(here("data/RKI_Impf/working/RKI_Impfquote_COVID19_"), Sys.Date(), ".xlsx"), sheet = 2))
   istgleich_geladen_heute <- suppressMessages(all_equal(RKI_Impf_geladen, RKI_Impf_heute))  == TRUE 
   
   # Wenn gleich, wurden die Daten nicht aktualisiert und 'geladen.xlsx' kann wieder gelöscht werden.
@@ -56,10 +55,10 @@ if (is_in_dir == TRUE) {
     
     
     RKI_Impf_heute_update <-
-      read_excel(paste0(
+      suppressMessages(read_excel(paste0(
         here("data/RKI_Impf/working/RKI_Impfquote_COVID19_"), Sys.Date(), ".xlsx"),
         sheet = 2,
-        n_max = 16)
+        n_max = 16))
     
     
     # Clean Data
@@ -98,8 +97,12 @@ if (is_in_dir == TRUE) {
 
 if (is_in_dir == FALSE) {
   
-  RKI_Impf_gestern <- read_excel(paste0(here("data/RKI_Impf/working/RKI_Impfquote_COVID19_"), Sys.Date()-1, ".xlsx"), sheet = 2)
-  istgleich_geladen_gestern <-  suppressMessages(all_equal(RKI_Impf_geladen, RKI_Impf_gestern)) == TRUE
+  
+  neuste_datei <- max(list.files(here("data/RKI_Impf/working")))
+  
+  RKI_Impf_neuste_datei <- suppressMessages(read_excel(paste0(here("data/RKI_Impf/working/"),neuste_datei), sheet = 2))
+  # RKI_Impf_gestern <- read_excel(paste0(here("data/RKI_Impf/working/RKI_Impfquote_COVID19_"), Sys.Date()-2, ".xlsx"), sheet = 2)
+  istgleich_geladen_gestern <-  suppressMessages(all_equal(RKI_Impf_geladen, RKI_Impf_neuste_datei)) == TRUE
   
   
   # geladen und gestern gleich 'geladen.xlsx' wieder löschen (sie oben zu 1.)
@@ -126,10 +129,10 @@ if (is_in_dir == FALSE) {
     
     # Umbenannten Datensatz 'geladen.xlsx', jetzt "RKI_Impfquote_COVID19_",Sys.Date(),".xlsx", laden und in RKI_Impf_heute_geladen laden
     RKI_Impf_heute_geladen <-
-      read_excel(paste0(
+      suppressMessages(read_excel(paste0(
         here("data/RKI_Impf/working/RKI_Impfquote_COVID19_"), Sys.Date(), ".xlsx"),
       sheet = 2,
-      n_max = 16)
+      n_max = 16))
     
     
     # Clean Data
@@ -153,6 +156,21 @@ if (is_in_dir == FALSE) {
     # Neuen gesamt Datensatz Speichern
     write.csv(RKI_Impf_gesamt,
               here("data/RKI_Impf/final/RKI_Impf_gesamt.csv"),
+              row.names = FALSE)
+    
+    ### Gesamtdaten aus Blatt 3 der aktuellen Zahlen ziehen 
+    neuste_datei_neu <- max(list.files(here("data/RKI_Impf/working")))
+    RKI_Impf_geladen_Blatt3 <- suppressMessages(read_excel(paste0(here("data/RKI_Impf/working/"),neuste_datei_neu), sheet = 3))
+    
+    RKI_Impf_geladen_Blatt3 <- RKI_Impf_geladen_Blatt3 %>% 
+      clean_names() %>% 
+      filter(datum != "Impfungen gesamt") %>%
+      rename(date = datum) %>% 
+      mutate(date = excel_numeric_to_date(as.numeric(date)))
+    
+    # Neuen gesamt Datensatz Speichern
+    write.csv(RKI_Impf_geladen_Blatt3,
+              here("data/RKI_Impf/final/RKI_Impf_gesamt_aus_neusten_daten.csv"),
               row.names = FALSE)
     
     
