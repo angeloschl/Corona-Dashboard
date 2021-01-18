@@ -53,12 +53,15 @@ if (is_in_dir == TRUE) {
   # Testen!  
     RKI_Impf_gesamt <- suppressMessages(read_csv(here("data/RKI_Impf/final/RKI_Impf_gesamt.csv")))
     
+    header <- c("rs", "bundesland", "erstimpfung_impfungenkumulativ_gesamt","erstimpfung_impfungenkumulativ_bio_n_tech", "erstimpfung_impfungenkumulativ_moderna",  "erstimpfung_differenz_zum_vortag", "erstimpfung_impfquote_percent", "zweitimpfung_impfungenkumulativ", "zweitimpfung_differenz_zum_vortag")
     
     RKI_Impf_heute_update <-
       suppressMessages(read_excel(paste0(
         here("data/RKI_Impf/working/RKI_Impfquote_COVID19_"), Sys.Date(), ".xlsx"),
         sheet = 2,
-        n_max = 16))
+        col_names = header,
+        skip = 3,
+        n_max = 17))
     
     
     # Clean Data
@@ -128,11 +131,17 @@ if (is_in_dir == FALSE) {
     
     
     # Umbenannten Datensatz 'geladen.xlsx', jetzt "RKI_Impfquote_COVID19_",Sys.Date(),".xlsx", laden und in RKI_Impf_heute_geladen laden
+    header <- c("rs", "bundesland", "erstimpfung_impfungenkumulativ_gesamt","erstimpfung_impfungenkumulativ_bio_n_tech", "erstimpfung_impfungenkumulativ_moderna",  "erstimpfung_differenz_zum_vortag", "erstimpfung_impfquote_percent", "zweitimpfung_impfungenkumulativ", "zweitimpfung_differenz_zum_vortag")
+    
+    
     RKI_Impf_heute_geladen <-
       suppressMessages(read_excel(paste0(
         here("data/RKI_Impf/working/RKI_Impfquote_COVID19_"), Sys.Date(), ".xlsx"),
-      sheet = 2,
-      n_max = 16))
+        sheet = 2,
+        col_names = header,
+        skip = 3,
+        n_max = 16))
+  
     
     
     # Clean Data
@@ -160,7 +169,7 @@ if (is_in_dir == FALSE) {
     
     ### Gesamtdaten aus Blatt 3 der aktuellen Zahlen ziehen 
     neuste_datei_neu <- max(list.files(here("data/RKI_Impf/working")))
-    RKI_Impf_geladen_Blatt3 <- suppressMessages(read_excel(paste0(here("data/RKI_Impf/working/"),neuste_datei_neu), sheet = 3))
+    RKI_Impf_geladen_Blatt3 <- suppressMessages(read_excel(paste0(here("data/RKI_Impf/working/"),neuste_datei_neu), sheet = 4))
     
     RKI_Impf_geladen_Blatt3 <- RKI_Impf_geladen_Blatt3 %>% 
       clean_names() %>% 
