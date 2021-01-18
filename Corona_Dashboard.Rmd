@@ -1,5 +1,5 @@
 ---
-title: "Corona Dashboard - `r Sys.Date()`" 
+title: "Corona Dashboard - `r Sys.time()`" 
 output: 
   flexdashboard::flex_dashboard:
     orientation: rows
@@ -30,9 +30,9 @@ library(glue)
 theme_set(theme_light())
 ```
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 source(here("src/Fallzahlen_laden.R"))
-source(here("src/Impfen.R"))
+source(here("src/Impfen_Neu.R"))
 
 ```
 
@@ -42,7 +42,7 @@ NummernMitPunkt <- function(x, digits=0) {
 }
 ```
 
-```{r include=FALSE}
+```{r DatenLaden, include=FALSE}
 
 # wenn schon in der der Environment geladen, nicht erneut laden.
 if (!exists("RKI_COVID19")) {
@@ -63,7 +63,9 @@ if (!exists("RKI_Impf")) {
 RKI_Impf <- read_csv(here("data/RKI_Impf/final/RKI_Impf_gesamt.csv"))
 }
 
-
+if (!exists("RKI_Impf_gesamt_täglich_neu")) {
+RKI_Impf_gesamt_täglich_neu <- read_csv(here("data/RKI_Impf/final/RKI_Impf_gesamt_aus_neusten_daten.csv"))
+}
 
 
 
@@ -177,12 +179,28 @@ valueBox(
 Row {data-height=125}
 -----------------------------------------------------------------------
 
+### Todesfälle Heute
+
+```{r TodesfälleHeute}
+Bund_todesfälle_gesamt_df = RKI_COVID19 %>%
+  filter(NeuerTodesfall %in% c(-1,1)) %>%
+  summarise(Bundesland = "Gesamt",
+            Anzahl = sum(AnzahlFall))
+
+valueBox(
+  NummernMitPunkt(Bund_todesfälle_gesamt_df$Anzahl),
+  icon = "fa-heart",
+  caption = "Neu gemeldete Todesfälle",
+  color = "#7e7e7e")
+```
+
+
 ### Neue Impfungen Gestern
 ```{r NeueImpfungenGestern}
 RKI_Impf_gestern <- RKI_Impf %>%
   group_by(date) %>% 
-  summarize(impfungen_kumulativ = sum(impfungen_kumulativ,na.rm = TRUE),
-            differenz_zum_vortag = sum(differenz_zum_vortag,na.rm = TRUE)) %>% 
+  summarize(impfungen_kumulativ = sum(erstimpfung_impfungenkumulativ_gesamt,na.rm = TRUE),
+            differenz_zum_vortag = sum(erstimpfung_differenz_zum_vortag,na.rm = TRUE)) %>% 
   arrange(desc(date)) %>% 
   .[1,] 
 
@@ -197,7 +215,7 @@ RKI_Impf_gestern <- RKI_Impf %>%
 ```{r AnzahlallerGeimpften}
 RKI_Impf_gestern <- RKI_Impf %>%
   group_by(date) %>% 
-  summarize(impfungen_kumulativ = sum(impfungen_kumulativ,na.rm = TRUE)) %>% 
+  summarize(impfungen_kumulativ = sum(erstimpfung_impfungenkumulativ_gesamt,na.rm = TRUE)) %>% 
   arrange(desc(date)) %>% 
   .[1,] 
 
@@ -205,7 +223,7 @@ RKI_Impf_gestern <- RKI_Impf %>%
   NummernMitPunkt(RKI_Impf_gestern$impfungen_kumulativ),
   icon = "fa-thumbs-o-up",
   caption = glue::glue("Anzahl aller Geimpften (Stand {RKI_Impf_gestern$date +1})"),
-  color = "primary")
+  color = "info")
 ```
 
 
@@ -213,7 +231,7 @@ RKI_Impf_gestern <- RKI_Impf %>%
 ```{r Impfqoute}
 RKI_Impf_gestern <- RKI_Impf %>%
   group_by(date) %>% 
-  summarize(impfungen_kumulativ = sum(impfungen_kumulativ,na.rm = TRUE)) %>% 
+  summarize(impfungen_kumulativ = sum(erstimpfung_impfungenkumulativ_gesamt,na.rm = TRUE)) %>% 
   arrange(desc(date)) %>% 
   .[1,] 
 
@@ -309,7 +327,7 @@ Bundesländer_Bund_Tabelle_df%>%
     row_spec(17,
            bold = T,
            background = "#DCDCDC") %>% 
-  kable_styling("hover",
+  kable_styling(bootstrap_options = c("condensed","hover"),
                 full_width = F,
                 position = "left",
                 fixed_thead = T,
@@ -395,7 +413,7 @@ Städte_Tabelle_df %>%
 ```
 
 
-Grafiken {data-icon="fa-bar-chart"}
+Infektionen {data-icon="fa-bar-chart"}
 ===================================== 
 
 Row {data-height=500}
@@ -570,66 +588,48 @@ Bund_BL_Gesamt %>%
   theme(legend.position = "none")
 
 )
+```
+
+
+
+Impfungen {data-icon="fa-bar-chart"}
+===================================== 
+
+Row {data-height=1000}
+-----------------------------------------------------------------------
+
+### Anzahl der Impfungen pro Tag Bundesweit  `r glue::glue("(Stand {max(RKI_Impf$date) +1})")`
+
+```{r Impfverlauf}
+ggplotly(
+RKI_Impf_gesamt_täglich_neu %>%
+  ggplot(aes(x = date , y = erstimpfung)) +
+  geom_col(fill = "black") +
+  labs(x = "",
+       y = "Impfungen",
+       title = "Anzahl der tgälichen Impfungen bundesweit")
+) 
+```
+
+### Prozent der Impfungen pro Bundesland `r glue::glue("(Stand {max(RKI_Impf$date) +1})")`
+```{r Impfungen_Prozent_Bundesland}
+ggplotly(
+RKI_Impf %>% 
+  filter(date == max(date)) %>% 
+  mutate(prozent_geimpft = round(erstimpfung_impfquote_percent/1,2),
+         bundesland = fct_reorder(bundesland,sort(bundesland,decreasing = T))) %>% 
+  ggplot(aes(x = prozent_geimpft, y = bundesland))+
+  scale_x_continuous(labels = function(x) paste0(NummernMitPunkt(x,digits = 1), '%'))+
+#  coord_cartesian(xlim = c(0,100))+
+  geom_col(fill = "black")+
+    labs(x = "Prozent geimpft",
+         y = "",
+         title = "Prozent der geimpften pro Bundesland")
+)
+```
+
+
+
+```{r beep}
 beepr::beep(1)
 ```
-
-
-
-```{r eval=FALSE, include=FALSE}
-RKI_Corona_Landkreise <- read_csv(here("data/RKI_Corona_Landkreise.csv"))
-Einwohner_Bundesland_Landkreise_df = RKI_Corona_Landkreise %>% 
-  select(RS, EWZ, EWZ_BL) %>% 
-  rename(IdLandkreis = RS,
-         EWZ_LK = EWZ) 
-
-
-#mooving sum
-ms <- function(x, n = 7) {
-    zoo::rollapply(x,n,sum,na.pad = T,align = "right")
-  }
-
-
-Städte = c("SK Darmstadt","LK Darmstadt-Dieburg", "SK Frankfurt am Main","SK Düsseldorf","LK Offenbach")
-
-RKI_COVID19 %>%
-  mutate(Fallzahl = ifelse(NeuerFall %in% c(0,1),AnzahlFall,0),
-         Fallzahl_neu = ifelse(NeuerFall %in% c(-1,1),AnzahlFall,0),
-         Todesfall = ifelse(NeuerTodesfall %in% c(0,1),AnzahlTodesfall,0),
-         Todesfall_neu = ifelse(NeuerTodesfall %in% c(-1,1),AnzahlTodesfall,0),
-         Genesen = ifelse(NeuGenesen %in% c(0,1),AnzahlGenesen,0),
-         Genesen_neu = ifelse(NeuGenesen %in% c(-1,1),AnzahlGenesen,0)) %>% 
-  group_by(Meldedatum, Landkreis,IdLandkreis) %>% 
-  summarize(Fallzahl = sum(Fallzahl),
-            Fallzahl_neu = sum(Fallzahl_neu),
-            Todesfall = sum(Todesfall),
-            Todesfall_neu = sum(Todesfall_neu),
-            Genesen = sum(Genesen),
-            Genesen_neu = sum(Genesen_neu)) %>%
-    filter(Landkreis %in% Städte) %>%
-  ungroup() %>% 
-  group_by(Landkreis,IdLandkreis) %>% 
-  complete(Meldedatum = seq.Date(min(MinDatum), max(MaxDatum), by="day")) %>% 
-  replace(is.na(.), 0) %>% 
-  mutate(SiebenTageSumme = ms(Fallzahl)) %>% 
-  ungroup() %>% 
-  group_by(Landkreis,IdLandkreis) %>% 
-  summarise(Fallzahl = sum(Fallzahl),
-            Fallzahl_neu = sum(Fallzahl_neu),
-            Todesfall = sum(Todesfall),
-            Todesfall_neu = sum(Todesfall_neu),
-            Genesen = sum(Genesen),
-            Genesen_neu = sum(Genesen_neu),
-            SiebenTageSumme = last(SiebenTageSumme)) %>% 
-  left_join(., Einwohner_Bundesland_Landkreise_df,   by = "IdLandkreis") %>% 
-  mutate(SiebenTageInzidenz = round((SiebenTageSumme/EWZ_LK)*100000,1)) %>% 
-  select(Landkreis, Fallzahl_neu,SiebenTageSumme,SiebenTageInzidenz) %>% 
-      kbl() %>% 
-  kable_material() %>% 
-  kable_styling("hover",
-                full_width = F,
-                position = "left",
-                fixed_thead = T,
-                html_font = "helvetica",
-                font_size = 16)
-```
-
