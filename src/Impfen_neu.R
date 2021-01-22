@@ -131,7 +131,7 @@ if (is_in_dir == FALSE) {
     
     
     # Umbenannten Datensatz 'geladen.xlsx', jetzt "RKI_Impfquote_COVID19_",Sys.Date(),".xlsx", laden und in RKI_Impf_heute_geladen laden
-    header <- c("rs", "bundesland", "erstimpfung_impfungenkumulativ_gesamt","erstimpfung_impfungenkumulativ_bio_n_tech", "erstimpfung_impfungenkumulativ_moderna",  "erstimpfung_differenz_zum_vortag", "erstimpfung_impfquote_percent", "zweitimpfung_impfungenkumulativ", "zweitimpfung_differenz_zum_vortag")
+    header <- c("rs", "bundesland","gesamtzahl_bisher_verabreichter_impfstoffdosen", "erstimpfung_impfungenkumulativ_gesamt","erstimpfung_impfungenkumulativ_bio_n_tech", "erstimpfung_impfungenkumulativ_moderna",  "erstimpfung_differenz_zum_vortag", "erstimpfung_impfquote_percent", "zweitimpfung_impfungenkumulativ", "zweitimpfung_differenz_zum_vortag")
     
     
     RKI_Impf_heute_geladen <-
@@ -142,8 +142,7 @@ if (is_in_dir == FALSE) {
         skip = 3,
         n_max = 16))
   
-    
-    
+  
     # Clean Data
     RKI_Impf_heute_geladen <- RKI_Impf_heute_geladen %>%
       clean_names() %>%
