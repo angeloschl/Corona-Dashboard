@@ -620,7 +620,7 @@ RKI_Impf %>%
          bundesland = fct_reorder(bundesland,sort(bundesland,decreasing = T))) %>% 
   ggplot(aes(x = prozent_geimpft, y = bundesland))+
   scale_x_continuous(labels = function(x) paste0(NummernMitPunkt(x,digits = 1), '%'))+
-#  coord_cartesian(xlim = c(0,100))+
+  coord_cartesian(xlim = c(0,100))+
   geom_col(fill = "black")+
     labs(x = "Prozent geimpft",
          y = "",
