@@ -607,7 +607,7 @@ RKI_Impf_gesamt_täglich_neu %>%
   geom_col(fill = "black") +
   labs(x = "",
        y = "Impfungen",
-       title = "Anzahl der tgälichen Impfungen bundesweit")
+       title = "Anzahl der täglichen Erstimpfungen bundesweit")
 ) 
 ```
 
