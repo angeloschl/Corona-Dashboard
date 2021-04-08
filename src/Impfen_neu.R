@@ -32,73 +32,16 @@ if (is_in_dir == TRUE) {
     
     file.remove(here("data/RKI_Impf/working/geladen.xlsx"))
     
-    message("Impfzahlen: Heute geladen / Kein Update")
+    message("RKI-Impfzahlen: Heute geladen")
   }
-  
-  
-  # Wenn sie nicht gleich sind, dann wurden der Datensatz aktualisiert.
-  # Dann muss der alte Datensatz von heute gelöscht werden und geladen in heute umbenannt werden.
-  if (istgleich_geladen_heute == FALSE) {
-    
-    file.remove(paste0(here("data/RKI_Impf/working/RKI_Impfquote_COVID19_"), Sys.Date(), ".xlsx"))
-    
-    file.rename(
-      here("data/RKI_Impf/working/geladen.xlsx"),
-      paste0(here("data/RKI_Impf/working/RKI_Impfquote_COVID19_"), Sys.Date(), ".xlsx"))
-    
-    
-  #### TO-DO: ####  
-  # Hier muss jetzt der RKI_Impf_gesamt.csv aktualisiert werden.
-  # Die veralteten Daten von heute löschen und die aktuellen neu hinzufügen. 
-  # Testen!  
-    RKI_Impf_gesamt <- suppressMessages(read_csv(here("data/RKI_Impf/final/RKI_Impf_gesamt.csv")))
-    
-    header <- c("rs", "bundesland",
-                "erstimpfung_impfungenkumulativ_gesamt",
-                "erstimpfung_impfungenkumulativ_bio_n_tech", "erstimpfung_impfungenkumulativ_moderna",  "erstimpfung_differenz_zum_vortag", "erstimpfung_impfquote_percent",
-                "zweitimpfung_impfungenkumulativ", "zweitimpfung_differenz_zum_vortag")
-    
-    RKI_Impf_heute_update <-
-      suppressMessages(read_excel(paste0(
-        here("data/RKI_Impf/working/RKI_Impfquote_COVID19_"), Sys.Date(), ".xlsx"),
-        sheet = 2,
-        col_names = header,
-        skip = 3,
-        n_max = 17))
-    
-    
-    # Clean Data
-    RKI_Impf_heute_update <- RKI_Impf_heute_update %>%
-      clean_names() %>%
-      mutate(date = Sys.Date() - 1) %>% # Daten auf gestern zurück datieren, weil da wurde geimpft (nicht heute). 
-      select(date, everything()) # Trick um 'date' als erste Spalte zu bekommen
-    
-    
-    # Zahlen von heute aus dem Datensatz löschen und aktualisierte Zahlen hinzufügen
-    RKI_Impf_gesamt <- RKI_Impf_gesamt %>% 
-      filter(date != max(date)) %>%
-      bind_rows(., RKI_Impf_heute_update) %>%
-      arrange(desc(date))
-    
-    
-    
-    # Neuen Datensatz speichern
-    write.csv(RKI_Impf_gesamt,
-              here("data/RKI_Impf/final/RKI_Impf_gesamt.csv"),
-              row.names = FALSE)
-    
-    
-    message("Impfzahlen: Update!! 'RKI_Impf_gesamt' wurde aktualisiert")
-  }
-  
   
 }
 
 
 
 # Wenn is_in_dir FALSE ist, gibt es zwei Möglichkeiten.
-# 1. Der Datensatz ist noch gleich zu dem von Gestern, weil es noch neuen Daten von Heute gibt. Dann muss 'geladen.xlsx' wieder gelöscht werden
-# 2. Der Datensatz ist der Neue von heute. Dann muss er umbenannt werden auf dsa heutige Datum und die Daten in RKI_Impf_gesamt.csv hinzugefügt werden. 
+# 1. Der Datensatz ist noch gleich zu dem von Gestern, weil es noch keine neuen Daten von Heute gibt. Dann muss 'geladen.xlsx' wieder gelöscht werden
+# 2. Der Datensatz ist der Neue von heute. Dann muss er umbenannt werden auf das heutige Datum und die Daten in RKI_Impf_gesamt.csv hinzugefügt werden. 
 
 
 if (is_in_dir == FALSE) {
@@ -128,70 +71,118 @@ if (is_in_dir == FALSE) {
       here("data/RKI_Impf/working/geladen.xlsx"),
       paste0(here("data/RKI_Impf/working/RKI_Impfquote_COVID19_"), Sys.Date(), ".xlsx"))
     
+    # Blatt 2 aufbereiten ----------------------------------------------------
     
-    # 'RKI_Impf_gesamt' laden und neue Daten hinzufügen
-    RKI_Impf_gesamt <- suppressMessages(read_csv(here("data/RKI_Impf/final/RKI_Impf_gesamt.csv")))
-    
-    
-    # Umbenannten Datensatz 'geladen.xlsx', jetzt "RKI_Impfquote_COVID19_",Sys.Date(),".xlsx", laden und in RKI_Impf_heute_geladen laden
-    header <- c("rs", "bundesland",
-                "gesamtzahl_bisher_verabreichter_impfstoffdosen",
-                "erstimpfung_impfungenkumulativ_gesamt", "erstimpfung_impfungenkumulativ_bio_n_tech", "erstimpfung_impfungenkumulativ_moderna", "erstimpfung_impfungenkumulativ_AstraZeneca",
-                "erstimpfung_differenz_zum_vortag", "erstimpfung_impfquote_percent",
-                "zweitimpfung_impfungenkumulativ_gesamt", "zweitimpfung_impfungenkumulativ_bio_n_tech", "zweitimpfung_impfungenkumulativ_moderna", 
-                "zweitimpfung_differenz_zum_vortag", "zweitimpfung_impfquote_percent")
+    # 'RKI_Impf_heute_blatt_2' laden und neue Daten von heute hinzufügen
+    RKI_Impf_heute_blatt_2 <- suppressMessages(read_csv(here("data/RKI_Impf/aufbereitete_daten/RKI_Impf_heute_blatt_2.csv")))
     
     
-    RKI_Impf_heute_geladen <-
+    # Umbenannten Datensatz 'geladen.xlsx', jetzt "RKI_Impfquote_COVID19_",Sys.Date(),".xlsx", laden und in RKI_Impf_heute_blatt_2/3/4 laden
+    header_blatt_2 <- c("rs", "bundesland",
+                "insgesamt_über_alle_impfstellen_gesamtzahl_bisher_verabreichter_impfungen",
+                "insgesamt_über_alle_impfstellen_impfquote_mit_einer_impfung_gesmat","insgesamt_über_alle_impfstellen_impfquote_mit_einer_impfung_<60_jahre","insgesamt_über_alle_impfstellen_impfquote_mit_einer_impfung_60+_jahre",
+                "insgesamt_über_alle_impfstellen_impfquote_vollständig_geimpft_gesmat","insgesamt_über_alle_impfstellen_impfquote_vollständig_geimpft_<60_jahre","insgesamt_über_alle_impfstellen_impfquote_vollständig_geimpft_60+_jahre",
+                "impfungen_in_impfzentren_mobilen_teams_und_krankenhäusern_eine_impfung_<60_jahre","impfungen_in_impfzentren_mobilen_teams_und_krankenhäusern_eine_impfung_60+_jahre", "impfungen_in_impfzentren_mobilen_teams_und_krankenhäusern_vollständig_geimpft_<60_jahre","impfungen_in_impfzentren_mobilen_teams_und_krankenhäusern_vollständig_geimpft_60+_jahre",
+                "impfungen_bei_niedergelassenen_ärzten_eine_impfung_<60_jahre","impfungen_bei_niedergelassenen_ärzten_eine_impfung_60+_jahre", "impfungen_bei_niedergelassenen_ärzten_vollständig_geimpft_<60_jahre","impfungen_bei_niedergelassenen_ärzten_vollständig_geimpft_60+_jahre")
+    
+    
+
+    RKI_Impf_heute_blatt_2 <-
       suppressMessages(read_excel(paste0(
         here("data/RKI_Impf/working/RKI_Impfquote_COVID19_"), Sys.Date(), ".xlsx"),
         sheet = 2,
-        col_names = header,
-        skip = 3,
-        n_max = 16))
+        col_names = header_blatt_2,
+        skip = 4,
+        n_max = 18))
   
   
     # Clean Data
-    RKI_Impf_heute_geladen <- RKI_Impf_heute_geladen %>%
-      clean_names() %>%
-      mutate(date = Sys.Date() - 1) %>% # Daten auf gestern zurück datieren, weil da wurde geimpft (nicht heute). 
-      select(date, everything()) # Trick um 'date' als erste Spalte zu bekommen
-    
-    
-    
-    
-    # Wenn heute noch nicht in 'RKI_Impf_gesamt' steht, hinzufügen. (Davon ist auszugehen, nur zusätzliche Paranoia)
-    if (sum(RKI_Impf_gesamt$date %in% RKI_Impf_heute_geladen$date) == 0) {
-      RKI_Impf_gesamt <-
-        bind_rows(RKI_Impf_gesamt, RKI_Impf_heute_geladen) %>%
-        arrange(desc(date))
-      message("Neue Daten 'RKI_Impf_gesamt' hinzugefügt")
-    }
+    RKI_Impf_heute_blatt_2 <- RKI_Impf_heute_blatt_2 %>%
+      clean_names() 
     
     
     # Neuen gesamt Datensatz Speichern
-    write.csv(RKI_Impf_gesamt,
-              here("data/RKI_Impf/final/RKI_Impf_gesamt.csv"),
+    write.csv(RKI_Impf_heute_blatt_2,
+              here("data/RKI_Impf/aufbereitete_daten/RKI_Impf_heute_blatt_2.csv"),
               row.names = FALSE)
     
-    ### Gesamtdaten aus Blatt 3 der aktuellen Zahlen ziehen 
-    neuste_datei_neu <- max(list.files(here("data/RKI_Impf/working")))
-    RKI_Impf_geladen_Blatt3 <- suppressMessages(read_excel(paste0(here("data/RKI_Impf/working/"),neuste_datei_neu), sheet = 4))
+    message("Neue Daten 'RKI_Impf_heute_blatt_2' hinzugefügt")
+  
     
-    RKI_Impf_geladen_Blatt3 <- RKI_Impf_geladen_Blatt3 %>% 
-      clean_names() %>% 
-      filter(datum != "Impfungen gesamt") %>%
+
+#  Blatt 3 aufbereiten ----------------------------------------------------
+    RKI_Impf_heute_blatt_3 <- suppressMessages(read_csv(here("data/RKI_Impf/aufbereitete_daten/RKI_Impf_heute_blatt_3.csv")))
+    
+    
+    # Umbenannten Datensatz 'geladen.xlsx', jetzt "RKI_Impfquote_COVID19_",Sys.Date(),".xlsx", laden und in RKI_Impf_heute_blatt_2/3/4 laden
+    header_blatt_3 <- c("rs", "bundesland",
+                        "impfungen_in_impfzentren_mobilen_teams_krankenhäusern_eine_impfung_impfungen_kumulativ_gesamt","impfungen_in_impfzentren_mobilen_teams_krankenhäusern_eine_impfung_impfungen_kumulativ_biontech","impfungen_in_impfzentren_mobilen_teams_krankenhäusern_eine_impfung_impfungen_kumulativ_moderna","impfungen_in_impfzentren_mobilen_teams_krankenhäusern_eine_impfung_impfungen_kumulativ_astrazeneca","impfungen_in_impfzentren_mobilen_teams_krankenhäusern_eine_impfung_differenz_zum_Vortag",									
+                        "impfungen_in_impfzentren_mobilen_teams_krankenhäusern_vollständig_geimpft_impfungen_kumulativ_gesamt","impfungen_in_impfzentren_mobilen_teams_krankenhäusern_vollständig_geimpft_impfungen_kumulativ_biontech","impfungen_in_impfzentren_mobilen_teams_krankenhäusern_vollständig_geimpft_impfungen_kumulativ_moderna","impfungen_in_impfzentren_mobilen_teams_krankenhäusern_vollständig_geimpft_impfungen_kumulativ_astrazeneca","impfungen_in_impfzentren_mobilen_teams_krankenhäusern_vollständig_geimpft_differenz_zum_Vortag",									
+                        "impfungen_bei_niedergelassenen_ärzten_eine_impfung_impfungen_kumulativ_gesamt","impfungen_bei_niedergelassenen_ärzten_eine_impfung_impfungen_kumulativ_biontech","impfungen_bei_niedergelassenen_ärzten_eine_impfung_impfungen_kumulativ_moderna","impfungen_bei_niedergelassenen_ärzten_eine_impfung_impfungen_kumulativ_astrazeneca","impfungen_bei_niedergelassenen_ärzten_eine_impfung_differenz_zum_Vortag",									
+                        "impfungen_bei_niedergelassenen_ärzten_vollständig_geimpft_impfungen_kumulativ_gesamt","impfungen_bei_niedergelassenen_ärzten_vollständig_geimpft_impfungen_kumulativ_biontech","impfungen_bei_niedergelassenen_ärzten_vollständig_geimpft_impfungen_kumulativ_moderna","impfungen_bei_niedergelassenen_ärzten_vollständig_geimpft_impfungen_kumulativ_astrazeneca","impfungen_bei_niedergelassenen_ärzten_vollständig_geimpft_differenz_zum_Vortag")
+                       
+    
+    
+    RKI_Impf_heute_blatt_3 <-
+      suppressMessages(read_excel(paste0(
+        here("data/RKI_Impf/working/RKI_Impfquote_COVID19_"), Sys.Date(), ".xlsx"),
+        sheet = 3,
+        col_names = header_blatt_3,
+        skip = 4,
+        n_max = 18))
+    
+    
+    # Clean Data
+    RKI_Impf_heute_blatt_3 <- RKI_Impf_heute_blatt_3 %>%
+      clean_names() 
+    
+    
+    # Neuen gesamt Datensatz Speichern
+    write.csv(RKI_Impf_heute_blatt_3,
+              here("data/RKI_Impf/aufbereitete_daten/RKI_Impf_heute_blatt_3.csv"),
+              row.names = FALSE)
+    
+    message("Neue Daten 'RKI_Impf_heute_blatt_3' hinzugefügt")
+    
+
+    
+    
+    
+    #  Blatt 4 aufbereiten ----------------------------------------------------
+    RKI_Impf_heute_blatt_4 <- suppressMessages(read_csv(here("data/RKI_Impf/aufbereitete_daten/RKI_Impf_heute_blatt_4.csv")))
+    
+    
+    # Umbenannten Datensatz 'geladen.xlsx', jetzt "RKI_Impfquote_COVID19_",Sys.Date(),".xlsx", laden und in RKI_Impf_heute_blatt_2/3/4 laden
+    header_blatt_4 <- c("datum",	"erstimpfung",	"zweitimpfung",	"gesamtzahl_verabreichter_impfstoffdosen")
+    
+    
+    RKI_Impf_heute_blatt_4 <-
+      suppressMessages(read_excel(paste0(
+        here("data/RKI_Impf/working/RKI_Impfquote_COVID19_"), Sys.Date(), ".xlsx"),
+        sheet = 4,
+        col_names = header_blatt_4,
+        skip = 1,
+        n_max = Inf))
+    
+    RKI_Impf_heute_blatt_4 <- RKI_Impf_heute_blatt_4 %>% 
+      head(-4) %>% 
       rename(date = datum) %>% 
-      mutate(date = excel_numeric_to_date(as.numeric(date)))
+      mutate(date = excel_numeric_to_date(as.numeric(date))) 
+    
+    # Clean Data
+    RKI_Impf_heute_blatt_4 <- RKI_Impf_heute_blatt_4 %>%
+      clean_names() 
+    
     
     # Neuen gesamt Datensatz Speichern
-    write.csv(RKI_Impf_geladen_Blatt3,
-              here("data/RKI_Impf/final/RKI_Impf_gesamt_aus_neusten_daten.csv"),
+    write.csv(RKI_Impf_heute_blatt_4,
+              here("data/RKI_Impf/aufbereitete_daten/RKI_Impf_heute_blatt_4.csv"),
               row.names = FALSE)
     
+    message("Neue Daten 'RKI_Impf_heute_blatt_4' hinzugefügt")
     
   
-    message("Impfzahlen: Neue Daten geladen und zu 'RKI_Impf_gesamt' hinzugefügt.")
+    message("RKI-Impfzahlen: Neue Daten geladen und aufgereitet.")
   }
   
 }

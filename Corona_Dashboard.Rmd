@@ -59,13 +59,24 @@ if (!exists("Neufindektion_Datum_df")) {
 Neufindektion_Datum_df <- read_csv(here("data/Erstellt/Neufindektion_Datum_df.csv"))
 }
 
-if (!exists("RKI_Impf")) {
-RKI_Impf <- read_csv(here("data/RKI_Impf/final/RKI_Impf_gesamt.csv"))
+# if (!exists("RKI_Impf")) {
+# RKI_Impf <- read_csv(here("data/RKI_Impf/final/RKI_Impf_gesamt.csv"))
+# }
+# 
+# if (!exists("RKI_Impf_gesamt_täglich_neu")) {
+# RKI_Impf_gesamt_täglich_neu <- read_csv(here("data/RKI_Impf/final/RKI_Impf_gesamt_aus_neusten_daten.csv"))
+# }
+
+if (!exists("RKI_Impf_heute_blatt_2")) {
+RKI_Impf_heute_blatt_2 <- read_csv(here("data/RKI_Impf/aufbereitete_daten/RKI_Impf_heute_blatt_2.csv"))
+}
+if (!exists("RKI_Impf_heute_blatt_3")) {
+RKI_Impf_heute_blatt_3 <- read_csv(here("data/RKI_Impf/aufbereitete_daten/RKI_Impf_heute_blatt_3.csv"))
+}
+if (!exists("RKI_Impf_heute_blatt_4")) {
+RKI_Impf_heute_blatt_4 <- read_csv(here("data/RKI_Impf/aufbereitete_daten/RKI_Impf_heute_blatt_4.csv"))
 }
 
-if (!exists("RKI_Impf_gesamt_täglich_neu")) {
-RKI_Impf_gesamt_täglich_neu <- read_csv(here("data/RKI_Impf/final/RKI_Impf_gesamt_aus_neusten_daten.csv"))
-}
 
 
 
@@ -197,46 +208,41 @@ valueBox(
 
 ### Neue Impfungen Gestern
 ```{r NeueImpfungenGestern}
-RKI_Impf_gestern <- RKI_Impf %>%
-  group_by(date) %>% 
-  summarize(impfungen_kumulativ = sum(erstimpfung_impfungenkumulativ_gesamt,na.rm = TRUE),
-            differenz_zum_vortag = sum(erstimpfung_differenz_zum_vortag,na.rm = TRUE)) %>% 
-  arrange(desc(date)) %>% 
-  .[1,] 
+# RKI_Impf_gestern <- RKI_Impf %>%
+#   group_by(date) %>% 
+#   summarize(impfungen_kumulativ = sum(erstimpfung_impfungenkumulativ_gesamt,na.rm = TRUE),
+#             differenz_zum_vortag = sum(erstimpfung_differenz_zum_vortag,na.rm = TRUE)) %>% 
+#   arrange(desc(date)) %>% 
+#   .[1,] 
+# 
+
+RKI_Impf_gestern <- RKI_Impf_heute_blatt_4 %>%
+  filter(date == max(date))
+
 
   valueBox(
-  NummernMitPunkt(RKI_Impf_gestern$differenz_zum_vortag),
+  NummernMitPunkt(RKI_Impf_gestern$erstimpfung),
   icon = "fa-plus",
-  caption = glue::glue("Neu geimpft (Stand {RKI_Impf_gestern$date +1})"),
+  caption = glue::glue("Neue Erstimpfungen (Stand {RKI_Impf_gestern$date +1})"),
   color = "primary")
 ```
 
 ### Anzahl aller Geimpften
 ```{r AnzahlallerGeimpften}
-RKI_Impf_gestern <- RKI_Impf %>%
-  group_by(date) %>% 
-  summarize(impfungen_kumulativ = sum(erstimpfung_impfungenkumulativ_gesamt,na.rm = TRUE)) %>% 
-  arrange(desc(date)) %>% 
-  .[1,] 
+RKI_Impf_Summe_Erstimpfungen <- sum(RKI_Impf_heute_blatt_4$erstimpfung)
 
   valueBox(
-  NummernMitPunkt(RKI_Impf_gestern$impfungen_kumulativ),
+  NummernMitPunkt(RKI_Impf_Summe_Erstimpfungen),
   icon = "fa-thumbs-o-up",
-  caption = glue::glue("Anzahl aller Geimpften (Stand {RKI_Impf_gestern$date +1})"),
+  caption = glue::glue("Anzahl aller Erstimpfungen (Stand {RKI_Impf_gestern$date +1})"),
   color = "info")
 ```
 
 
 ### Impfqoute
 ```{r Impfqoute}
-RKI_Impf_gestern <- RKI_Impf %>%
-  group_by(date) %>% 
-  summarize(impfungen_kumulativ = sum(erstimpfung_impfungenkumulativ_gesamt,na.rm = TRUE)) %>% 
-  arrange(desc(date)) %>% 
-  .[1,] 
-
 valueBox(
-  glue::glue("{NummernMitPunkt(round(RKI_Impf_gestern$impfungen_kumulativ/EinwohnerzahlBund*100,2),digits = 2)}%"),
+  glue::glue("{NummernMitPunkt(round(RKI_Impf_Summe_Erstimpfungen/EinwohnerzahlBund*100,2),digits = 2)}%"),
   icon = "fa-percent",
   caption = glue::glue("Anzahl aller Geimpften (Stand {RKI_Impf_gestern$date +1})"),
   color = "#66cccc")
@@ -356,7 +362,7 @@ ms <- function(x, n = 7) {
   }
 
 
-Städte = c("SK Darmstadt","LK Darmstadt-Dieburg", "SK Frankfurt am Main","SK Düsseldorf","LK Offenbach")
+Städte = c("SK Darmstadt","LK Darmstadt-Dieburg", "SK Frankfurt am Main","SK Düsseldorf","LK Offenbach","SK Köln")
 
 Städte_Tabelle_df = RKI_COVID19 %>%
   mutate(Fallzahl = ifelse(NeuerFall %in% c(0,1),AnzahlFall,0),
@@ -425,7 +431,7 @@ Row {data-height=500}
 ```{r}
 Bund_BL_Gesamt = RKI_COVID19 %>%
   filter(NeuerFall %in% c(0, 1),
-         Meldedatum > Sys.Date() - 300) %>%
+         Meldedatum > as.Date("2020-03-01")) %>%
   rename(date = Meldedatum) %>%
   cross_by_dimensions(Bundesland) %>%
   cross_by_periods(c("day", "week", "month", "quarter")) %>%
@@ -598,21 +604,51 @@ Impfungen {data-icon="fa-bar-chart"}
 Row {data-height=1000}
 -----------------------------------------------------------------------
 
-### Anzahl der Impfungen pro Tag Bundesweit  `r glue::glue("(Stand {max(RKI_Impf$date) +1})")`
+### Anzahl der Impfungen pro Tag Bundesweit  `r glue::glue("(Stand {max(RKI_Impf_heute_blatt_4$date) +1})")`
 
 ```{r Impfverlauf}
 ggplotly(
-RKI_Impf_gesamt_täglich_neu %>%
-  ggplot(aes(x = date , y = erstimpfung)) +
-  geom_col(fill = "black") +
-  labs(x = "",
-       y = "Impfungen",
-       title = "Anzahl der täglichen Erstimpfungen bundesweit")
+RKI_Impf_heute_blatt_4 %>%
+  pivot_longer(!date, names_to = "Impfung", values_to = "Anzahl_Impfung") %>% 
+  filter(Impfung != "gesamtzahl_verabreichter_impfstoffdosen") %>% 
+
+  ggplot(aes(x = date , y = Anzahl_Impfung, fill = Impfung)) +
+    geom_bar(stat="identity", position ="identity",alpha = 0.9) +
+    scale_fill_manual(values=c("#007500","#143b0d")) +
+    labs(x = "",
+         y = "Impfungen",
+         title = "Anzahl der täglichen Erst- & Zweitimpfungen bundesweit")+
+    scale_y_continuous(labels = function(x) NummernMitPunkt(x,digits = 0))
+
 ) 
 ```
 
-### Prozent der Impfungen pro Bundesland `r glue::glue("(Stand {max(RKI_Impf$date) +1})")`
+
+
+### Prozent der Impfungen pro Bundesland `r glue::glue("(Stand {max(RKI_Impf_heute_blatt_4$date+1)})")`
 ```{r Impfungen_Prozent_Bundesland}
+ggplotly(
+RKI_Impf_heute_blatt_2 %>% 
+  filter(bundesland != "Impfzentren Bund*") %>% 
+  mutate(prozent_geimpft_erste = round(as.numeric(insgesamt_uber_alle_impfstellen_impfquote_mit_einer_impfung_gesmat)/1,2),
+         prozent_geimpft_zweite = round(as.numeric(insgesamt_uber_alle_impfstellen_impfquote_vollstandig_geimpft_gesmat)/1,2),
+         bundesland = fct_reorder(bundesland,sort(bundesland,decreasing = T))) %>% 
+  ggplot(aes(y = bundesland))+
+  scale_x_continuous(labels = function(x) paste0(NummernMitPunkt(x,digits = 1), '%'))+
+  coord_cartesian(xlim = c(0,100))+
+  geom_col(aes(x = prozent_geimpft_erste),fill = "#007500")+
+  geom_col(aes(x = prozent_geimpft_zweite),fill = "#143b0d")+
+
+    labs(x = "Prozent geimpft",
+         y = "",
+         title = "Prozent der geimpften pro Bundesland")
+)
+```
+
+
+
+
+```{r Impfungen_Prozent_Bundesland_alt, eval=FALSE, include=FALSE}
 ggplotly(
 RKI_Impf %>% 
   filter(date == max(date)) %>% 
