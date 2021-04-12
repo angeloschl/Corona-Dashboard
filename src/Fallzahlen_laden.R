@@ -27,7 +27,7 @@ if (is_in_dir) {
 
 
 
-  # Vergleichen ob die der neu geladene Datensatz geladen.xlsx gleich mit den schon im Ordner enthaltenen ist. 'a' Variable wird initialisiert auf NA.
+  # Vergleichen ob die der neu geladene Datensatz geladen.csv gleich mit den schon im Ordner enthaltenen ist. 'a' Variable wird initialisiert auf NA.
   a <- NA
   for (i in 1:length(files)) {
     RKI_alt <- suppressMessages(read_csv(paste0(here("data/RKI/working/", files[i]))))
@@ -44,7 +44,7 @@ if (is_in_dir) {
       here("data/RKI/original/geladen.csv"),
       paste0(here("data/RKI/working/RKI_COVID19_"), Sys.Date(), ".csv")
     )
-    message("Infektionszahlen:  Neue Daten geladen")
+    message("RKI-Fallzahlen: Neue Daten geladen")
 
 
 
@@ -66,7 +66,7 @@ if (is_in_dir) {
         file.remove(paste0(here("data/RKI/working/RKI_COVID19_"), Sys.Date() - 1, ".csv"))
       }
       setwd(here())
-      message("Infektionszahlen:  Alter Datensatz gezippt")
+      message("RKI-Fallzahlen:  Alter Datensatz gezippt")
     }
 
     Neufindektion_Datum_df <- suppressMessages(read_csv(here("data/Erstellt/Neufindektion_Datum_df.csv")))
@@ -92,7 +92,7 @@ if (is_in_dir) {
 
 
       if (all(max(RKI_COVID19$Meldedatum) + 1 != Neufindektion_Datum_df$Datum)) {
-        # Datum in Datumschreiben. Maximales Datum aus Datensatz +1 rechnen.
+        # Datum in Datum schreiben. Maximales Datum aus Datensatz +1 rechnen.
         # Im Datenframe eine neue Zeile anlegen [+1,1]
         Neufindektion_Datum_df[nrow(Neufindektion_Datum_df) + 1, 1] <- max(RKI_COVID19$Meldedatum) + 1
 
@@ -110,7 +110,7 @@ if (is_in_dir) {
           here("data/Erstellt/Neufindektion_Datum_df.csv"),
           row.names = F
         )
-        message("Infektionszahlen: Gesamtzahl der Neuinfektionen von heute wurden ergänzt")
+        message("RKI-Fallzahlen: Gesamtzahl der Neuinfektionen von heute wurden ergänzt")
       }
       
       
@@ -123,9 +123,9 @@ if (is_in_dir) {
   
   if (any(a) == TRUE) {
     file.remove(here("data/RKI/original/geladen.csv"))
-    message("Infektionszahlen: Keine Neue Daten")
+    message("RKI-Fallzahlen: Keine Neue Daten")
   }
   
 } else {
-  message("Infektionszahlen: Daten existieren schon")
+  message("RKI-Fallzahlen: Daten existieren schon")
 }

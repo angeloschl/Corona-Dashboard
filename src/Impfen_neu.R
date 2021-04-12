@@ -79,7 +79,7 @@ if (is_in_dir == FALSE) {
     
     # Umbenannten Datensatz 'geladen.xlsx', jetzt "RKI_Impfquote_COVID19_",Sys.Date(),".xlsx", laden und in RKI_Impf_heute_blatt_2/3/4 laden
     header_blatt_2 <- c("rs", "bundesland",
-                "insgesamt_über_alle_impfstellen_gesamtzahl_bisher_verabreichter_impfungen",
+                "insgesamt_über_alle_impfstellen_gesamtzahl_bisher_verabreichter_impfungen","insgesamt_über_alle_impfstellen_gesamtzahl_einmalig_geimpft","insgesamt_über_alle_impfstellen_gesamtzahl_vollständig_geimpft",
                 "insgesamt_über_alle_impfstellen_impfquote_mit_einer_impfung_gesmat","insgesamt_über_alle_impfstellen_impfquote_mit_einer_impfung_<60_jahre","insgesamt_über_alle_impfstellen_impfquote_mit_einer_impfung_60+_jahre",
                 "insgesamt_über_alle_impfstellen_impfquote_vollständig_geimpft_gesmat","insgesamt_über_alle_impfstellen_impfquote_vollständig_geimpft_<60_jahre","insgesamt_über_alle_impfstellen_impfquote_vollständig_geimpft_60+_jahre",
                 "impfungen_in_impfzentren_mobilen_teams_und_krankenhäusern_eine_impfung_<60_jahre","impfungen_in_impfzentren_mobilen_teams_und_krankenhäusern_eine_impfung_60+_jahre", "impfungen_in_impfzentren_mobilen_teams_und_krankenhäusern_vollständig_geimpft_<60_jahre","impfungen_in_impfzentren_mobilen_teams_und_krankenhäusern_vollständig_geimpft_60+_jahre",
@@ -87,7 +87,7 @@ if (is_in_dir == FALSE) {
     
     
 
-    RKI_Impf_heute_blatt_2 <-
+      RKI_Impf_heute_blatt_2 <-
       suppressMessages(read_excel(paste0(
         here("data/RKI_Impf/working/RKI_Impfquote_COVID19_"), Sys.Date(), ".xlsx"),
         sheet = 2,
