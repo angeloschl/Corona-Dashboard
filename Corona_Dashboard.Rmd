@@ -217,7 +217,7 @@ valueBox(
 # 
 
 RKI_Impf_gestern <- RKI_Impf_heute_blatt_4 %>%
-  filter(date == max(date))
+  filter(date == max(date,na.rm = TRUE))
 
 
   valueBox(
@@ -229,7 +229,7 @@ RKI_Impf_gestern <- RKI_Impf_heute_blatt_4 %>%
 
 ### Anzahl aller Geimpften
 ```{r AnzahlallerGeimpften}
-RKI_Impf_Summe_Erstimpfungen <- sum(RKI_Impf_heute_blatt_4$erstimpfung)
+RKI_Impf_Summe_Erstimpfungen <- sum(RKI_Impf_heute_blatt_4$erstimpfung,na.rm = TRUE)
 
   valueBox(
   NummernMitPunkt(RKI_Impf_Summe_Erstimpfungen),
