@@ -40,6 +40,40 @@ source(here("src/Impfen_Neu.R"))
 NummernMitPunkt <- function(x, digits=0) {
   return(formatC(x, format="f", big.mark = ".", decimal.mark   = ",",digits))
 }
+
+
+AusPunktKommaMachen <- function(x){
+  z <- gsub("[^0-9,.]", "", x)
+  z <- gsub("\\.", "", z)
+  gsub(",", ".", z)
+}
+
+
+VergleichVortagePfeil <- function(data, Reihe, Anzahl = 3, reverse = TRUE) {
+  Data <- data %>%
+    select({{ Reihe }}) %>%
+    mutate(t = as.numeric(AusPunktKommaMachen({{ Reihe }}))) %>%
+    mutate(t_minus_1 = lag(t)) %>%
+    drop_na() %>%
+    mutate(vergleich = ifelse(t > t_minus_1, "+", ifelse(t == t_minus_1, "=", "-"))) %>%
+    select(-t, -t_minus_1) %>%
+    tail(Anzahl)
+
+  # Die Funktion rev() ist hier ganz wichtig. damit dei Pfeile in der richtigen Reienfolge angezeigt werden.
+
+  if (reverse == TRUE) {
+    a <- stringr::str_c(rev(Data$vergleich), collapse = " ")
+  }
+
+  if (reverse == FALSE) {
+    a <- stringr::str_c(Data$vergleich, collapse = " ")
+  }
+
+  return(a)
+}
+
+
+
 ```
 
 ```{r DatenLaden, include=FALSE}
@@ -75,6 +109,14 @@ RKI_Impf_heute_blatt_3 <- read_csv(here("data/RKI_Impf/aufbereitete_daten/RKI_Im
 }
 if (!exists("RKI_Impf_heute_blatt_4")) {
 RKI_Impf_heute_blatt_4 <- read_csv(here("data/RKI_Impf/aufbereitete_daten/RKI_Impf_heute_blatt_4.csv"))
+}
+
+if (!exists("DIVI_Intensiv")) {
+DIVI_Intensiv <- read_csv(here("data/DIVI_Intensiv/aufbereitet/divi_intesiv_aufbereitet.csv"))
+}
+
+if (!exists("RKI_R_Wert")) {
+RKI_R_Wert <- read_csv(here("data/RKI_RWert/working/RKI_RWert_heute.csv"))
 }
 
 
@@ -249,8 +291,73 @@ valueBox(
 ```
 
 
+Row {data-height=125}
+-----------------------------------------------------------------------
+### DIVI-Intesiv
+```{r DIVI-Intesiv}
+DIVI_Intensiv_heute <- DIVI_Intensiv %>%
+  summarise(faelle_covid_aktuell = last(faelle_covid_aktuell))
 
-Row {data-height=750}
+DIVI_Intensiv_gestern <- DIVI_Intensiv %>%
+  filter(date == (max(date) - 1)) %>%
+  summarise(faelle_covid_aktuell = last(faelle_covid_aktuell))
+
+DIVI_Intensiv_sieben_tage_durchschnitt <- DIVI_Intensiv %>%
+  filter(date > (max(date) - 8)) %>%
+  filter(date < max(date)) %>%
+  summarise(faelle_covid_aktuell = mean(faelle_covid_aktuell))
+
+# DIVI_Intensiv %>%
+#   filter(date > (max(date) - 7)) %>%
+# #  filter(date < max(date)) %>%
+#   select(-betten_belegt) %>% 
+#   lm(date ~ faelle_covid_aktuell, data = .) 
+  
+valueBox(
+  glue::glue("{DIVI_Intensiv_heute} ({VergleichVortagePfeil(DIVI_Intensiv,faelle_covid_aktuell, Anzahl = 4)})"),
+  icon = "fa-hospital-o",
+  caption = glue::glue("Belegte Intensivbetten (Stand {max(DIVI_Intensiv$date)})"),
+  color = ifelse(DIVI_Intensiv_heute>DIVI_Intensiv_sieben_tage_durchschnitt,"#cd6689","#66CDAA"))
+```
+
+### RWert_vier_Tage
+```{r RWert_vier_Tage}
+
+
+RWert_vier_Tage <- RKI_R_Wert %>%
+  select(Datum,Schätzer_Reproduktionszahl_R ) %>% 
+  filter(Datum == max(Datum)) %>%
+  summarise(Schätzer_Reproduktionszahl_R)
+
+valueBox(
+  glue::glue("{RWert_vier_Tage} ({VergleichVortagePfeil(RKI_R_Wert,Schätzer_Reproduktionszahl_R, Anzahl = 4)})"),
+  icon = "fa-line-chart",
+  caption = glue::glue("R-Wert (Stand {max(RKI_R_Wert$Datum)})"),
+  color = "#FFBC00")
+
+```
+
+### RWert_sieben_Tage
+```{r RWert_sieben_Tage}
+
+
+RWert_sieben_Tage <- RKI_R_Wert %>%
+  select(Datum,Schätzer_7_Tage_R_Wert) %>% 
+  filter(Datum == max(Datum)-1) %>%
+  summarise(Schätzer_7_Tage_R_Wert)
+
+valueBox(
+  glue::glue("{RWert_sieben_Tage} ({VergleichVortagePfeil(RKI_R_Wert,Schätzer_7_Tage_R_Wert, Anzahl = 4)})"),
+  icon = "fa-line-chart",
+  caption = glue::glue("R-Wert 7 Tage (Stand {max(RKI_R_Wert$Datum)-1})"),
+  color = "#FFCC00")
+
+```
+
+
+
+
+Row {data-height=625}
 -----------------------------------------------------------------------
 
 ### Bundesländer
@@ -555,7 +662,7 @@ BL_Tabelle_df = RKI_COVID19 %>%
 ggplotly(
   
 BL_Tabelle_df %>%
-  filter(date > Sys.Date()-33) %>%
+  filter(date > Sys.Date()-50) %>%
     ggplot(aes(date, SiebenTageInzidenz,color = Bundesland, size = Bundesland))+
   geom_line()+
   scale_size_manual(values = c(.5, .5, .5, .5, .5, .5, .5, .5, .5, .5, .5, .5, .5, .5, .5, .5, 1.5))+
@@ -564,6 +671,8 @@ BL_Tabelle_df %>%
     date_breaks = "3 day",
     date_labels = "%d.%m")+ 
   theme(axis.text.x = element_text(angle = 45)) 
+
+
   
 
 )
@@ -661,6 +770,28 @@ RKI_Impf %>%
     labs(x = "Prozent geimpft",
          y = "",
          title = "Prozent der geimpften pro Bundesland")
+)
+```
+
+
+DIVI-Intensiv {data-icon="fa-bar-chart"}
+===================================== 
+
+Row {data-height=1000}
+-----------------------------------------------------------------------
+
+### DIVI-Intensivzahlen
+
+```{r DIVI-Intensivzahlen}
+ggplotly(
+DIVI_Intensiv %>%
+  ggplot(aes(x = date , y = faelle_covid_aktuell)) +
+  geom_line() +
+    labs(x = "Datum",
+         y = "Intensivpatienten mit SARS-COV2",
+         title = "Belegeung der deutschen Intensivbetten ") +
+  scale_x_date(date_breaks = "1 month",
+               date_labels = "%b %y")
 )
 ```
 
