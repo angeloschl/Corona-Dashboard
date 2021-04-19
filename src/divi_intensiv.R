@@ -4,7 +4,7 @@
 # URL zu den DAten      https://edoc.rki.de/bitstream/handle/176904/8106/2021-04-15_12-15_teilbare_divi_daten.csv?sequence=1&isAllowed=y
 # URL zum Daten Portal https://edoc.rki.de/handle/176904/8106
 # alte URL     url <- paste0("https://www.divi.de/joomlatools-files/docman-files/divi-intensivregister-tagesreports-csv/DIVI-Intensivregister_", date, "_", j, "-15.csv")
-
+# Neu ? https://diviexchange.blob.core.windows.net/%24web/DIVI_Intensivregister_Auszug_pro_Landkreis.csv
 
 suppressMessages(library(here))
 suppressMessages(library(readxl))
@@ -13,30 +13,89 @@ suppressMessages(library(tidyverse))
 
 
 
-tt <- as.POSIXct("2015-07-23 00:00:00")
-tts <- seq(tt, by = "hours", length = 24)
-tth <- format(tts, "%H")
+
+# for (i in 0:tage_spanne) {
+#   date <- Sys.Date() - i
+# 
+# 
+#   if (!file.exists(paste0(here("data/DIVI_Intensiv/working/DIVI_Intensiv_"), date, ".csv"))) {
+#     for (j in tth) {
+#       url <- paste0("https://edoc.rki.de/bitstream/handle/176904/8109/", date, "_", j, "-15_teilbare_divi_daten.csv?sequence=1&isAllowed=y")
+#       tryCatch(
+#         {
+#           curl::curl_download(url, destfile = paste0(here("data/DIVI_Intensiv/working/DIVI_Intensiv_"), date, ".csv"))
+#         },
+#         error = function(e) {}
+#       )
+#     }
+#   }
+# }
 
 
-tage_spanne <- as.numeric(Sys.Date() - as.Date("2020-04-24"))
-
-for (i in 0:tage_spanne) {
-  date <- Sys.Date() - i
 
 
 
-  if (!file.exists(paste0(here("data/DIVI_Intensiv/working/DIVI_Intensiv_"), date, ".csv"))) {
-    for (j in tth) {
-      url <- paste0("https://edoc.rki.de/bitstream/handle/176904/8106/", date, "-", j, "-15teilbare_divi_daten.csv?sequence=1&isAllowed=y")
-      tryCatch(
-        {
-          curl::curl_download(url, destfile = paste0(here("data/DIVI_Intensiv/working/DIVI_Intensiv_"), date, ".csv"))
-        },
-        error = function(e) {}
-      )
-    }
+
+url <- "https://diviexchange.blob.core.windows.net/%24web/DIVI_Intensivregister_Auszug_pro_Landkreis.csv"
+
+
+is_in_dir <- file.exists(paste0(here("data/DIVI_Intensiv/working/DIVI_Intensiv_"), Sys.Date(), ".csv"))
+
+if (!is_in_dir) {
+  # Neuen Daten laden
+  curl::curl_download(url,destfile = here("data/DIVI_Intensiv/geladen/geladen.csv"))
+  
+  DIVI_Intensiv_geladen <- suppressMessages(read_csv(here("data/DIVI_Intensiv/geladen/geladen.csv")))
+  
+  
+  # Nur .csv datein, da die anderen schon gezipped wurden. Sollte eigentlich immer nur eine datei sein.
+  files <- list.files(here("data/DIVI_Intensiv/working/")) %>%
+    .[grepl(".*\\.csv", .)]
+  
+  
+  
+  # Vergleichen ob die der neu geladene Datensatz geladen.csv gleich mit den schon im Ordner enthaltenen ist. 'a' Variable wird initialisiert auf NA.
+  a <- NA
+  suppressWarnings(
+  for (i in 1:length(files)) {
+    DIVI_Intensiv_alt <- suppressMessages(read_csv(paste0(here("data/DIVI_Intensiv/working/", files[i]))))
+    
+    a[i] <- suppressMessages(all_equal(DIVI_Intensiv_alt, DIVI_Intensiv_geladen)) == TRUE 
   }
+  )
+  
+  # wenn der "geladen" nicht mit den anderen gleich ist umbenennen.
+  # all: sind alle TRUE? wenn ja, dann soll der geladene Datensatz "geladen" umbenannt werden aufs heutige Datum.
+  
+  if (any(a) == FALSE) {
+    file.rename(
+      here("data/DIVI_Intensiv/geladen/geladen.csv"),
+      paste0(here("data/DIVI_Intensiv/working/DIVI_Intensiv_"), Sys.Date(), ".csv")
+    )
+    message("DIVI-Intensiv: Neue Daten geladen")
+    
+
+    }
+    
+
+  
+  if (any(a) == TRUE) {
+    file.remove(here("data/DIVI_Intensiv/geladen/geladen.csv"))
+    message("DIVI-Intensiv: Keine Neue Daten")
+  }
+  
+} else {
+  message("DIVI-Intensiv: Daten existieren schon")
 }
+
+
+
+
+
+
+
+
+
 
 
 

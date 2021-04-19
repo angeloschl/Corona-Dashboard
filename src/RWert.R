@@ -33,7 +33,7 @@ sind_gleich <- suppressMessages(all_equal(RKI_RWert_alt, RKI_RWert_geladen)) == 
 
 if (sind_gleich == TRUE) {
   file.remove(here("data/RKI_RWert/working/geladen.csv"))
-  message("RKI_RWert: Keine Neuen Zahlen.")
+  message("RKI_R-Wert: Keine Neuen Zahlen.")
 
 }
 
