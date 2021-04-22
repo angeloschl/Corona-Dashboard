@@ -36,7 +36,7 @@ source(here("src/Impfen_Neu.R"))
 
 ```
 
-```{r}
+```{r Formeln}
 NummernMitPunkt <- function(x, digits=0) {
   return(formatC(x, format="f", big.mark = ".", decimal.mark   = ",",digits))
 }
@@ -59,7 +59,7 @@ VergleichVortagePfeil <- function(data, Reihe, Anzahl = 3, reverse = TRUE) {
     select(-t, -t_minus_1) %>%
     tail(Anzahl)
 
-  # Die Funktion rev() ist hier ganz wichtig. damit dei Pfeile in der richtigen Reienfolge angezeigt werden.
+  # Die Funktion rev() ist hier ganz wichtig. damit die Pfeile in der richtigen Reihenfolge angezeigt werden.
 
   if (reverse == TRUE) {
     a <- stringr::str_c(rev(Data$vergleich), collapse = " ")
@@ -170,7 +170,7 @@ Bund_Fälle_Gesamt_df = RKI_COVID19 %>%
   summarise(Bundesland = "Gesamt",
             Anzahl = sum(AnzahlFall))
 
-valueBox(NummernMitPunkt(Bund_Fälle_Gesamt_df$Anzahl), 
+valueBox( glue::glue("{NummernMitPunkt(Bund_Fälle_Gesamt_df$Anzahl)} / {NummernMitPunkt(round(Bund_Fälle_Gesamt_df$Anzahl/EinwohnerzahlBund*100,2),digits = 2)}%"),
          icon = "fa-stethoscope",
          caption = "Anzahl aller Infizierter",
          color = "info")
@@ -219,21 +219,8 @@ valueBox(NummernMitPunkt(LetzteWocheInzidenz,digits = 1),
 
 ```
 
-### Durchseuchung 
-```{r Durchseuchung}
-valueBox(
-  glue::glue("{NummernMitPunkt(round(Bund_Fälle_Gesamt_df$Anzahl/EinwohnerzahlBund*100,2),digits = 2)}%"),
-  icon = "fa-percent",
-  caption = "Durchseuchung",
-  color = "#66cccc")
-```
-
-
-Row {data-height=125}
------------------------------------------------------------------------
 
 ### Todesfälle Heute
-
 ```{r TodesfälleHeute}
 Bund_todesfälle_gesamt_df = RKI_COVID19 %>%
   filter(NeuerTodesfall %in% c(-1,1)) %>%
@@ -246,6 +233,10 @@ valueBox(
   caption = "Neu gemeldete Todesfälle",
   color = "#7e7e7e")
 ```
+
+
+Row {data-height=125}
+-----------------------------------------------------------------------
 
 
 ### Neue Impfungen Gestern
@@ -332,7 +323,7 @@ RWert_vier_Tage <- RKI_R_Wert %>%
 valueBox(
   glue::glue("{RWert_vier_Tage} ({VergleichVortagePfeil(RKI_R_Wert,Schätzer_Reproduktionszahl_R, Anzahl = 4)})"),
   icon = "fa-line-chart",
-  caption = glue::glue("R-Wert (Stand {max(RKI_R_Wert$Datum)})"),
+  caption = glue::glue("R-Wert (Stand {max(RKI_R_Wert$Datum)+4})"),
   color = "#FFBC00")
 
 ```
@@ -349,7 +340,7 @@ RWert_sieben_Tage <- RKI_R_Wert %>%
 valueBox(
   glue::glue("{RWert_sieben_Tage} ({VergleichVortagePfeil(RKI_R_Wert,Schätzer_7_Tage_R_Wert, Anzahl = 4)})"),
   icon = "fa-line-chart",
-  caption = glue::glue("R-Wert 7 Tage (Stand {max(RKI_R_Wert$Datum)-1})"),
+  caption = glue::glue("R-Wert 7 Tage (Stand {max(RKI_R_Wert$Datum)-1+5})"),
   color = "#FFCC00")
 
 ```
@@ -780,7 +771,7 @@ DIVI-Intensiv {data-icon="fa-bar-chart"}
 Row {data-height=1000}
 -----------------------------------------------------------------------
 
-### DIVI-Intensivzahlen
+### DIVI-Intensivzahlen `r glue::glue("(Stand {max(DIVI_Intensiv$date)})")`
 
 ```{r DIVI-Intensivzahlen}
 ggplotly(
