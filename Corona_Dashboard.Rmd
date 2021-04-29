@@ -1,5 +1,5 @@
 ---
-title: "Corona Dashboard - `r Sys.time()`" 
+title: "Corona Dashboard - `r format(Sys.time(), '%d %B %Y - %H:%M')`" 
 output: 
   flexdashboard::flex_dashboard:
     orientation: rows
@@ -39,6 +39,11 @@ source(here("src/Impfen_Neu.R"))
 ```{r Formeln}
 NummernMitPunkt <- function(x, digits=0) {
   return(formatC(x, format="f", big.mark = ".", decimal.mark   = ",",digits))
+}
+
+# Moving Average
+ma <- function(x, n = 7) {
+  stats::filter(x, rep(1 / n, n), sides = 2)
 }
 
 
@@ -139,11 +144,9 @@ Einwohner_Bundesland_Landkreise_df = RKI_Corona_Landkreise %>%
 
 ```
 
-Tagesaktuelle Zahlen   {data-icon="fa-sticky-note"}
-===================================== 
+# Tagesaktuelle Zahlen {data-icon="fa-sticky-note"}
 
-Row {data-height=125}
------------------------------------------------------------------------
+## Row {data-height="125"}
 
 ### Neuinfektionen Gesamt
 
@@ -160,8 +163,6 @@ valueBox(
   color = ifelse(Bund_ZumVortag_df$`Differenz zum Vortag` == max(Neufindektion_Datum_df$Neuinfektionen), "warning", "primary"))
 ```
 
-
-
 ### Bund_Fälle_Gesamt
 
 ```{r}
@@ -177,50 +178,59 @@ valueBox( glue::glue("{NummernMitPunkt(Bund_Fälle_Gesamt_df$Anzahl)} / {Nummern
 
 ```
 
-
 ### 7 Tage Inzidenz
 
 ```{r}
-ma <- function(x, n = 7) {
-  stats::filter(x, rep(1 / n, n), sides = 2)
-}
+# Bund = RKI_COVID19 %>%
+#   filter(NeuerFall %in% c(0, 1)) %>%
+#   group_by(Meldedatum) %>%
+#   summarise(AnzahlFall = sum(AnzahlFall)) %>%
+#   ungroup() %>%
+#   mutate(ma_AnzahlFall = round(ma(AnzahlFall)))
+# 
+# LetzteWocheInzidenz = Bund %>% 
+#   filter(Meldedatum>Sys.Date()-8) %>% 
+#   select(AnzahlFall) %>% 
+#   sum()
+# 
+# 
+# VorletzteWocheInzidenz = Bund %>% 
+#   filter(Meldedatum>Sys.Date()-15) %>% 
+#   filter(Meldedatum<Sys.Date()-7) %>% 
+#   select(AnzahlFall) %>% 
+#   sum()
+# 
+# 
+# 
+# LetzteWocheInzidenz = round(LetzteWocheInzidenz/(EinwohnerzahlBund/100000),1)
+# VorletzteWocheInzidenz = round(VorletzteWocheInzidenz/(EinwohnerzahlBund/100000),1)
+# 
+# valueBox(NummernMitPunkt(LetzteWocheInzidenz,digits = 1), 
+#          icon = ifelse(LetzteWocheInzidenz>VorletzteWocheInzidenz,"fa-arrow-up","fa-arrow-down"),
+#          caption = "7 Tage Inzidenz", 
+#          color = ifelse(LetzteWocheInzidenz>VorletzteWocheInzidenz,"#cd6689","#66CDAA"))
 
-Bund = RKI_COVID19 %>%
-  filter(NeuerFall %in% c(0, 1)) %>%
-  group_by(Meldedatum) %>%
-  summarise(AnzahlFall = sum(AnzahlFall)) %>%
-  ungroup() %>%
-  mutate(ma_AnzahlFall = round(ma(AnzahlFall)))
-
-LetzteWocheInzidenz = Bund %>% 
-  filter(Meldedatum>Sys.Date()-8) %>% 
-  select(AnzahlFall) %>% 
-  sum()
 
 
-VorletzteWocheInzidenz = Bund %>% 
-  filter(Meldedatum>Sys.Date()-15) %>% 
-  filter(Meldedatum<Sys.Date()-7) %>% 
-  select(AnzahlFall) %>% 
-  sum()
+Neufindektion_heute <- Neufindektion_Datum_df %>% 
+  filter(Datum == max(Datum)) 
 
+Neufindektion_gestern <- Neufindektion_Datum_df %>% 
+  filter(Datum == max(Datum)-1) 
+  
 
+valueBox(glue::glue("{NummernMitPunkt(Neufindektion_heute$Sieben_Tage_Inzidenz,digits = 1)} ({VergleichVortagePfeil(Neufindektion_Datum_df,Sieben_Tage_Inzidenz, Anzahl = 4)})"),
+         icon = ifelse(Neufindektion_heute$Sieben_Tage_Inzidenz>Neufindektion_gestern$Sieben_Tage_Inzidenz,"fa-arrow-up","fa-arrow-down"),
+         caption = "7 Tage Inzidenz",
+         color = ifelse(Neufindektion_heute$Sieben_Tage_Inzidenz>Neufindektion_gestern$Sieben_Tage_Inzidenz,"#cd6689","#66CDAA"))
 
-LetzteWocheInzidenz = round(LetzteWocheInzidenz/(EinwohnerzahlBund/100000),1)
-VorletzteWocheInzidenz = round(VorletzteWocheInzidenz/(EinwohnerzahlBund/100000),1)
-
-
-
-valueBox(NummernMitPunkt(LetzteWocheInzidenz,digits = 1), 
-         icon = ifelse(LetzteWocheInzidenz>VorletzteWocheInzidenz,"fa-arrow-up","fa-arrow-down"),
-         caption = "7 Tage Inzidenz", 
-         color = ifelse(LetzteWocheInzidenz>VorletzteWocheInzidenz,"#cd6689","#66CDAA"))
+  
 
 
 ```
 
-
 ### Todesfälle Heute
+
 ```{r TodesfälleHeute}
 Bund_todesfälle_gesamt_df = RKI_COVID19 %>%
   filter(NeuerTodesfall %in% c(-1,1)) %>%
@@ -234,12 +244,10 @@ valueBox(
   color = "#7e7e7e")
 ```
 
-
-Row {data-height=125}
------------------------------------------------------------------------
-
+## Row {data-height="125"}
 
 ### Neue Impfungen Gestern
+
 ```{r NeueImpfungenGestern}
 # RKI_Impf_gestern <- RKI_Impf %>%
 #   group_by(date) %>% 
@@ -261,6 +269,7 @@ RKI_Impf_gestern <- RKI_Impf_heute_blatt_4 %>%
 ```
 
 ### Anzahl aller Geimpften
+
 ```{r AnzahlallerGeimpften}
 RKI_Impf_Summe_Erstimpfungen <- sum(RKI_Impf_heute_blatt_4$erstimpfung,na.rm = TRUE)
 
@@ -271,8 +280,8 @@ RKI_Impf_Summe_Erstimpfungen <- sum(RKI_Impf_heute_blatt_4$erstimpfung,na.rm = T
   color = "info")
 ```
 
-
 ### Impfqoute
+
 ```{r Impfqoute}
 valueBox(
   glue::glue("{NummernMitPunkt(round(RKI_Impf_Summe_Erstimpfungen/EinwohnerzahlBund*100,2),digits = 2)}%"),
@@ -281,10 +290,10 @@ valueBox(
   color = "#66cccc")
 ```
 
+## Row {data-height="125"}
 
-Row {data-height=125}
------------------------------------------------------------------------
 ### DIVI-Intesiv
+
 ```{r DIVI-Intesiv}
 DIVI_Intensiv_heute <- DIVI_Intensiv %>%
   summarise(faelle_covid_aktuell = last(faelle_covid_aktuell))
@@ -312,6 +321,7 @@ valueBox(
 ```
 
 ### RWert_vier_Tage
+
 ```{r RWert_vier_Tage}
 
 
@@ -329,6 +339,7 @@ valueBox(
 ```
 
 ### RWert_sieben_Tage
+
 ```{r RWert_sieben_Tage}
 
 
@@ -345,11 +356,7 @@ valueBox(
 
 ```
 
-
-
-
-Row {data-height=625}
------------------------------------------------------------------------
+## Row {data-height="625"}
 
 ### Bundesländer
 
@@ -441,9 +448,8 @@ Bundesländer_Bund_Tabelle_df%>%
 
 ```
 
-
-
 ### Städte
+
 ```{r include=FALSE}
 RKI_Corona_Landkreise <- read_csv("data/RKI_Corona_Landkreise.csv")
 Einwohner_Bundesland_Landkreise_df = RKI_Corona_Landkreise %>% 
@@ -452,7 +458,6 @@ Einwohner_Bundesland_Landkreise_df = RKI_Corona_Landkreise %>%
          EWZ_LK = EWZ) 
 ```
 
-
 ```{r}
 #mooving sum
 ms <- function(x, n = 7) {
@@ -460,7 +465,7 @@ ms <- function(x, n = 7) {
   }
 
 
-Städte = c("SK Darmstadt","LK Darmstadt-Dieburg", "SK Frankfurt am Main","SK Düsseldorf","LK Offenbach","SK Köln")
+Städte = c("SK Darmstadt","LK Darmstadt-Dieburg", "SK Frankfurt am Main","SK Düsseldorf","LK Offenbach","SK Köln","SK Wiesbaden")
 
 Städte_Tabelle_df = RKI_COVID19 %>%
   mutate(Fallzahl = ifelse(NeuerFall %in% c(0,1),AnzahlFall,0),
@@ -516,15 +521,11 @@ Städte_Tabelle_df %>%
                 font_size = 16)
 ```
 
+# Infektionen {data-icon="fa-bar-chart"}
 
-Infektionen {data-icon="fa-bar-chart"}
-===================================== 
-
-Row {data-height=500}
------------------------------------------------------------------------
+## Row {data-height="500"}
 
 ### Bundesländer
-
 
 ```{r}
 Bund_BL_Gesamt = RKI_COVID19 %>%
@@ -579,6 +580,7 @@ Bund_BL_Gesamt %>%
 ```
 
 ### Fallzahlen Deutschland
+
 ```{r}
 
 ma <- function(x, n = 7) {
@@ -617,12 +619,9 @@ Bund = RKI_COVID19 %>%
 ggplotly(Bund)
 ```
 
+## Row {data-height="500"}
 
-
-Row {data-height=500}
------------------------------------------------------------------------
 ### 7 Tage Inzidenzts Graph
-
 
 ```{r}
 BL_Tabelle_df = RKI_COVID19 %>%
@@ -670,9 +669,6 @@ BL_Tabelle_df %>%
 
 ```
 
-
-
-
 ### Coronafallzahlen pro Woche
 
 ```{r}
@@ -696,15 +692,11 @@ Bund_BL_Gesamt %>%
 )
 ```
 
+# Impfungen {data-icon="fa-bar-chart"}
 
+## Row {data-height="1000"}
 
-Impfungen {data-icon="fa-bar-chart"}
-===================================== 
-
-Row {data-height=1000}
------------------------------------------------------------------------
-
-### Anzahl der Impfungen pro Tag Bundesweit  `r glue::glue("(Stand {max(RKI_Impf_heute_blatt_4$date) +1})")`
+### Anzahl der Impfungen pro Tag Bundesweit `r glue::glue("(Stand {max(RKI_Impf_heute_blatt_4$date) +1})")`
 
 ```{r Impfverlauf}
 ggplotly(
@@ -723,9 +715,8 @@ RKI_Impf_heute_blatt_4 %>%
 ) 
 ```
 
-
-
 ### Prozent der Impfungen pro Bundesland `r glue::glue("(Stand {max(RKI_Impf_heute_blatt_4$date+1)})")`
+
 ```{r Impfungen_Prozent_Bundesland}
 ggplotly(
 RKI_Impf_heute_blatt_2 %>% 
@@ -745,9 +736,6 @@ RKI_Impf_heute_blatt_2 %>%
 )
 ```
 
-
-
-
 ```{r Impfungen_Prozent_Bundesland_alt, eval=FALSE, include=FALSE}
 ggplotly(
 RKI_Impf %>% 
@@ -764,12 +752,9 @@ RKI_Impf %>%
 )
 ```
 
+# DIVI-Intensiv {data-icon="fa-bar-chart"}
 
-DIVI-Intensiv {data-icon="fa-bar-chart"}
-===================================== 
-
-Row {data-height=1000}
------------------------------------------------------------------------
+## Row {data-height="1000"}
 
 ### DIVI-Intensivzahlen `r glue::glue("(Stand {max(DIVI_Intensiv$date)})")`
 
@@ -785,8 +770,6 @@ DIVI_Intensiv %>%
                date_labels = "%b %y")
 )
 ```
-
-
 
 ```{r beep}
 beepr::beep(1)
