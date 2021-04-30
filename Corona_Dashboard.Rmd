@@ -46,6 +46,10 @@ ma <- function(x, n = 7) {
   stats::filter(x, rep(1 / n, n), sides = 2)
 }
 
+#mooving sum
+ms <- function(x, n = 7) {
+    zoo::rollapply(x,n,sum,na.pad = T,align = "right")
+  }
 
 AusPunktKommaMachen <- function(x){
   z <- gsub("[^0-9,.]", "", x)
@@ -429,6 +433,7 @@ Bundesländer_Bund_Tabelle_df = full_join(Bundesländer_Bund_Tabelle_df, Bundesl
 
 
 Bundesländer_Bund_Tabelle_df%>%
+  select(Bundesland,`7 Tage Inzidenz`,`Differenz zum Vortag`,  Anzahl, `Fälle in den letzen 7 Tagen`) %>% 
     mutate(`Differenz zum Vortag`  = NummernMitPunkt(`Differenz zum Vortag` ),
          Anzahl = NummernMitPunkt(Anzahl),
          `Fälle in den letzen 7 Tagen` = NummernMitPunkt(`Fälle in den letzen 7 Tagen`),
@@ -459,12 +464,6 @@ Einwohner_Bundesland_Landkreise_df = RKI_Corona_Landkreise %>%
 ```
 
 ```{r}
-#mooving sum
-ms <- function(x, n = 7) {
-    zoo::rollapply(x,n,sum,na.pad = T,align = "right")
-  }
-
-
 Städte = c("SK Darmstadt","LK Darmstadt-Dieburg", "SK Frankfurt am Main","SK Düsseldorf","LK Offenbach","SK Köln","SK Wiesbaden")
 
 Städte_Tabelle_df = RKI_COVID19 %>%
@@ -501,7 +500,7 @@ Städte_Tabelle_df = RKI_COVID19 %>%
 
 
 Städte_Tabelle_df %>% 
-  select(Landkreis, Fallzahl_neu, Fallzahl,SiebenTageSumme,SiebenTageInzidenz) %>% 
+  select(Landkreis,SiebenTageInzidenz, Fallzahl_neu, Fallzahl,SiebenTageSumme) %>% 
   mutate(Fallzahl = NummernMitPunkt(Fallzahl),
          Fallzahl_neu = NummernMitPunkt(Fallzahl_neu),
          SiebenTageSumme = NummernMitPunkt(SiebenTageSumme),
