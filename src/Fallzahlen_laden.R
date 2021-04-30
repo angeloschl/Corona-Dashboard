@@ -100,9 +100,42 @@ if (is_in_dir) {
           filter(NeuerFall %in% c(-1, 1)) %>%
           summarise(AnzahlFall = sum(AnzahlFall)) %>%
           as.numeric()
-
+        
+        
+        #### Siebentage Inzidenz schreiben
+        
+        
+        ma <- function(x, n = 7) {
+          stats::filter(x, rep(1 / n, n), sides = 2)
+        }
+        
+        Bund = RKI_COVID19 %>%
+          filter(NeuerFall %in% c(0, 1)) %>%
+          group_by(Meldedatum) %>%
+          summarise(AnzahlFall = sum(AnzahlFall)) %>%
+          ungroup() %>%
+          mutate(ma_AnzahlFall = round(ma(AnzahlFall)))
+        
+        LetzteWocheInzidenz = Bund %>% 
+          filter(Meldedatum>Sys.Date()-8) %>% 
+          select(AnzahlFall) %>% 
+          sum()
+        
+        EinwohnerzahlBund = 83166711
+        
+        LetzteWocheInzidenz = round(LetzteWocheInzidenz/(EinwohnerzahlBund/100000),1)
+        
+        
+        Neufindektion_Datum_df[nrow(Neufindektion_Datum_df), 3] <- LetzteWocheInzidenz
+        
+        
+        
+        ####
+        
+        
+        
         Neufindektion_Datum_df <- Neufindektion_Datum_df %>%
-          arrange(desc(Datum))
+          arrange(Datum)
 
 
         write.csv(
