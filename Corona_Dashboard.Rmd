@@ -1,5 +1,5 @@
 ---
-title: "Corona Dashboard - `r format(Sys.time(), '%d %B %Y - %H:%M')`" 
+title: "Corona Dashboard - `r format(Sys.time(), '%d. %B %Y - %H:%M')`" 
 output: 
   flexdashboard::flex_dashboard:
     orientation: rows
@@ -27,6 +27,7 @@ library(gghighlight)
 library(here)
 library(janitor)
 library(glue)
+library(readxl)
 theme_set(theme_light())
 ```
 
@@ -58,7 +59,7 @@ AusPunktKommaMachen <- function(x){
 }
 
 
-VergleichVortagePfeil <- function(data, Reihe, Anzahl = 3, reverse = TRUE) {
+VergleichVortagePfeil <- function(data, Reihe, Anzahl = 5, reverse = TRUE) {
   Data <- data %>%
     select({{ Reihe }}) %>%
     mutate(t = as.numeric(AusPunktKommaMachen({{ Reihe }}))) %>%
@@ -126,6 +127,10 @@ DIVI_Intensiv <- read_csv(here("data/DIVI_Intensiv/aufbereitet/divi_intesiv_aufb
 
 if (!exists("RKI_R_Wert")) {
 RKI_R_Wert <- read_csv(here("data/RKI_RWert/working/RKI_RWert_heute.csv"))
+}
+
+if (!exists("RKI_Wochen_Inzidenz")) {
+RKI_Wochen_Inzidenz <- read_excel(here("data/RKI_WochenInzidenz/Altersverteilung.xlsx"),sheet = 1)
 }
 
 
@@ -223,7 +228,7 @@ Neufindektion_gestern <- Neufindektion_Datum_df %>%
   filter(Datum == max(Datum)-1) 
   
 
-valueBox(glue::glue("{NummernMitPunkt(Neufindektion_heute$Sieben_Tage_Inzidenz,digits = 1)} ({VergleichVortagePfeil(Neufindektion_Datum_df,Sieben_Tage_Inzidenz, Anzahl = 4)})"),
+valueBox(glue::glue("{NummernMitPunkt(Neufindektion_heute$Sieben_Tage_Inzidenz,digits = 1)} ({VergleichVortagePfeil(Neufindektion_Datum_df,Sieben_Tage_Inzidenz)})"),
          icon = ifelse(Neufindektion_heute$Sieben_Tage_Inzidenz>Neufindektion_gestern$Sieben_Tage_Inzidenz,"fa-arrow-up","fa-arrow-down"),
          caption = "7 Tage Inzidenz",
          color = ifelse(Neufindektion_heute$Sieben_Tage_Inzidenz>Neufindektion_gestern$Sieben_Tage_Inzidenz,"#cd6689","#66CDAA"))
@@ -318,7 +323,7 @@ DIVI_Intensiv_sieben_tage_durchschnitt <- DIVI_Intensiv %>%
 #   lm(date ~ faelle_covid_aktuell, data = .) 
   
 valueBox(
-  glue::glue("{DIVI_Intensiv_heute} ({VergleichVortagePfeil(DIVI_Intensiv,faelle_covid_aktuell, Anzahl = 4)})"),
+  glue::glue("{DIVI_Intensiv_heute} ({VergleichVortagePfeil(DIVI_Intensiv,faelle_covid_aktuell)})"),
   icon = "fa-hospital-o",
   caption = glue::glue("Belegte Intensivbetten (Stand {max(DIVI_Intensiv$date)})"),
   color = ifelse(DIVI_Intensiv_heute>DIVI_Intensiv_sieben_tage_durchschnitt,"#cd6689","#66CDAA"))
@@ -329,13 +334,13 @@ valueBox(
 ```{r RWert_vier_Tage}
 
 
-RWert_vier_Tage <- RKI_R_Wert %>%
-  select(Datum,Schätzer_Reproduktionszahl_R ) %>% 
+RWert_vier_Tage <- RKI_R_Wert %>% 
+  select(Datum,PS_4_Tage_R_Wert ) %>% 
   filter(Datum == max(Datum)) %>%
-  summarise(Schätzer_Reproduktionszahl_R)
+  summarise(PS_4_Tage_R_Wert)
 
 valueBox(
-  glue::glue("{RWert_vier_Tage} ({VergleichVortagePfeil(RKI_R_Wert,Schätzer_Reproduktionszahl_R, Anzahl = 4)})"),
+  glue::glue("{RWert_vier_Tage} ({VergleichVortagePfeil(RKI_R_Wert,PS_4_Tage_R_Wert)})"),
   icon = "fa-line-chart",
   caption = glue::glue("R-Wert (Stand {max(RKI_R_Wert$Datum)+4})"),
   color = "#FFBC00")
@@ -348,12 +353,12 @@ valueBox(
 
 
 RWert_sieben_Tage <- RKI_R_Wert %>%
-  select(Datum,Schätzer_7_Tage_R_Wert) %>% 
+  select(Datum,PS_7_Tage_R_Wert) %>% 
   filter(Datum == max(Datum)-1) %>%
-  summarise(Schätzer_7_Tage_R_Wert)
+  summarise(PS_7_Tage_R_Wert)
 
 valueBox(
-  glue::glue("{RWert_sieben_Tage} ({VergleichVortagePfeil(RKI_R_Wert,Schätzer_7_Tage_R_Wert, Anzahl = 4)})"),
+  glue::glue("{RWert_sieben_Tage} ({VergleichVortagePfeil(RKI_R_Wert,PS_7_Tage_R_Wert)})"),
   icon = "fa-line-chart",
   caption = glue::glue("R-Wert 7 Tage (Stand {max(RKI_R_Wert$Datum)-1+5})"),
   color = "#FFCC00")
@@ -464,7 +469,7 @@ Einwohner_Bundesland_Landkreise_df = RKI_Corona_Landkreise %>%
 ```
 
 ```{r}
-Städte = c("SK Darmstadt","LK Darmstadt-Dieburg", "SK Frankfurt am Main","SK Düsseldorf","LK Offenbach","SK Köln","SK Wiesbaden")
+Städte = c("SK Darmstadt","LK Darmstadt-Dieburg", "SK Frankfurt am Main","SK Düsseldorf","LK Offenbach","SK Köln","SK Wiesbaden","LK Rhein-Kreis Neuss","SK Würzburg")
 
 Städte_Tabelle_df = RKI_COVID19 %>%
   mutate(Fallzahl = ifelse(NeuerFall %in% c(0,1),AnzahlFall,0),
@@ -496,20 +501,24 @@ Städte_Tabelle_df = RKI_COVID19 %>%
             Genesen_neu = sum(Genesen_neu),
             SiebenTageSumme = last(SiebenTageSumme)) %>% 
   left_join(., Einwohner_Bundesland_Landkreise_df,   by = "IdLandkreis") %>% 
-  mutate(SiebenTageInzidenz = round((SiebenTageSumme/EWZ_LK)*100000,1))
+  mutate(SiebenTageInzidenz = round((SiebenTageSumme/EWZ_LK)*100000,1)) %>% 
+  ungroup()
 
 
 Städte_Tabelle_df %>% 
   select(Landkreis,SiebenTageInzidenz, Fallzahl_neu, Fallzahl,SiebenTageSumme) %>% 
+      arrange(SiebenTageInzidenz) %>% 
   mutate(Fallzahl = NummernMitPunkt(Fallzahl),
          Fallzahl_neu = NummernMitPunkt(Fallzahl_neu),
          SiebenTageSumme = NummernMitPunkt(SiebenTageSumme),
          SiebenTageInzidenz = NummernMitPunkt(SiebenTageInzidenz,digits = 1)) %>% 
-  
+
+
   rename("Differenz zum Vortag" = Fallzahl_neu,
          Anzahl = Fallzahl,
          "Fälle in den letzen 7 Tagen" = SiebenTageSumme,
          "7 Tage Inzidenz" = SiebenTageInzidenz) %>% 
+
   kbl(align = c("l","r","r","r","r")) %>% 
   kable_material() %>% 
   kable_styling("hover",
@@ -524,9 +533,9 @@ Städte_Tabelle_df %>%
 
 ## Row {data-height="500"}
 
-### Bundesländer
+<!-- ### Bundesländer -->
 
-```{r}
+```{r include=FALSE}
 Bund_BL_Gesamt = RKI_COVID19 %>%
   filter(NeuerFall %in% c(0, 1),
          Meldedatum > as.Date("2020-03-01")) %>%
@@ -592,11 +601,14 @@ Bund = RKI_COVID19 %>%
   summarise(AnzahlFall = sum(AnzahlFall)) %>%
   ungroup() %>%
   mutate(ma_AnzahlFall = round(ma(AnzahlFall))) %>%
-  mutate(max_AnzahlFall = ifelse(AnzahlFall == max(AnzahlFall), "1", "0")) %>% 
-  ggplot(aes(Meldedatum, AnzahlFall, fill = max_AnzahlFall)) +
-  geom_col(alpha = 1,
+  mutate(max_AnzahlFall = ifelse(AnzahlFall == max(AnzahlFall), "1", "0"),
+         wochenende = ifelse(weekdays(as.Date(Meldedatum)) %in% c("Sonntag","Samstag","Sunday","Saturday"),"1","0")) %>% 
+  ggplot(aes(Meldedatum, AnzahlFall, fill = max_AnzahlFall, alpha = wochenende)) +
+  geom_col(
            width = 0.8) +
   scale_fill_manual(values = c("1" = "red", "0" = "black"), guide = FALSE) +
+  scale_alpha_manual(values = c("1" = 0.6, "0" = 1), guide = FALSE) +
+
   geom_vline(xintercept = as.numeric(Lockdown1),
              color = "#000066",
              size = 0.5,
@@ -609,6 +621,7 @@ Bund = RKI_COVID19 %>%
             color = "red",
             alpha = .8,
             size = 0.95 ) +
+
   scale_x_date(date_breaks = "1 month",
                date_labels = "%b %y") +
   coord_cartesian(xlim = c(as.Date("2020-03-10"), NA)) +
@@ -695,7 +708,8 @@ Bund_BL_Gesamt %>%
 
 ## Row {data-height="1000"}
 
-### Anzahl der Impfungen pro Tag Bundesweit `r glue::glue("(Stand {max(RKI_Impf_heute_blatt_4$date) +1})")`
+
+### Anzahl der Impfungen pro Tag Bundesweit `r glue::glue("(Stand {max(RKI_Impf_heute_blatt_4$date) +1})")`  {data-width=550}
 
 ```{r Impfverlauf}
 ggplotly(
@@ -703,25 +717,25 @@ RKI_Impf_heute_blatt_4 %>%
   pivot_longer(!date, names_to = "Impfung", values_to = "Anzahl_Impfung") %>% 
   filter(Impfung != "gesamtzahl_verabreichter_impfstoffdosen") %>% 
 
-  ggplot(aes(x = date , y = Anzahl_Impfung, fill = Impfung)) +
+  ggplot(aes(x = date, y = Anzahl_Impfung, fill = Impfung)) +
     geom_bar(stat="identity", position ="identity",alpha = 0.9) +
     scale_fill_manual(values=c("#007500","#143b0d")) +
     labs(x = "",
          y = "Impfungen",
          title = "Anzahl der täglichen Erst- & Zweitimpfungen bundesweit")+
     scale_y_continuous(labels = function(x) NummernMitPunkt(x,digits = 0))
-
 ) 
 ```
 
-### Prozent der Impfungen pro Bundesland `r glue::glue("(Stand {max(RKI_Impf_heute_blatt_4$date+1)})")`
+
+### Prozent der Impfungen pro Bundesland `r glue::glue("(Stand {max(RKI_Impf_heute_blatt_4$date+1)})")` {data-width=450}
 
 ```{r Impfungen_Prozent_Bundesland}
 ggplotly(
 RKI_Impf_heute_blatt_2 %>% 
-  filter(bundesland != "Impfzentren Bund*") %>% 
-  mutate(prozent_geimpft_erste = round(as.numeric(insgesamt_uber_alle_impfstellen_impfquote_mit_einer_impfung_gesmat)/1,2),
-         prozent_geimpft_zweite = round(as.numeric(insgesamt_uber_alle_impfstellen_impfquote_vollstandig_geimpft_gesmat)/1,2),
+  filter(bundesland != "Bundesressorts**") %>% 
+  mutate(prozent_geimpft_erste = round(as.numeric(impfquote_mindestens_einmal_geimpft_gesamt)/1,2),
+         prozent_geimpft_zweite = round(as.numeric(impfquote_vollstandig_geimpft_gesamt)/1,2),
          bundesland = fct_reorder(bundesland,sort(bundesland,decreasing = T))) %>% 
   ggplot(aes(y = bundesland))+
   scale_x_continuous(labels = function(x) paste0(NummernMitPunkt(x,digits = 1), '%'))+
@@ -764,11 +778,95 @@ DIVI_Intensiv %>%
   geom_line() +
     labs(x = "Datum",
          y = "Intensivpatienten mit SARS-COV2",
-         title = "Belegeung der deutschen Intensivbetten ") +
+         title = "Belegung der deutschen Intensivbetten ") +
   scale_x_date(date_breaks = "1 month",
                date_labels = "%b %y")
 )
 ```
+
+
+# Demografische Verteilung {data-icon="fa-bar-chart"}
+
+## Row {data-height="1000"}
+
+### Inzidenzen in den Altersgruppen pro Woche  
+
+
+```{r RKI_Wochen_Inzidenz_daten}
+textcol <- "grey40"
+
+Altersverteilung_Plot <- RKI_Wochen_Inzidenz %>% 
+  pivot_longer(!Altersgruppe, names_to = "Kalenderwoche",values_to = "inzidenz") %>% 
+  mutate(Kalenderwoche = str_replace(Kalenderwoche,"\\_","-")) %>% 
+  mutate(woche = str_remove(Kalenderwoche,"....-"),
+         Jahr = str_remove(Kalenderwoche,"-.."),
+         Jahr = str_remove(Kalenderwoche,"-."),
+         Kalenderwoche2 = str_remove(Kalenderwoche,"-")) %>%
+  mutate(Kalenderwoche2 = as.numeric(Kalenderwoche2)) %>%
+  group_by(Altersgruppe) %>% 
+  mutate(fct_level = seq(from = 1, to = length(woche), by = 1)) %>% 
+  ungroup() %>% 
+  
+  
+  mutate(woche = fct_reorder(woche,fct_level,.fun = max)) %>% 
+  mutate(Kalenderwoche = fct_reorder(Kalenderwoche,fct_level,.fun = max)) %>% 
+  # create a new variable from inzidenz
+  mutate(inzidenzfactor=cut(inzidenz,breaks=c(0,5,10,15,20,35,50,100,150,200,300,600,max(inzidenz,na.rm=T)),
+                            labels=c("0-5",
+                                     "5-10",
+                                     "10-15",
+                                     "15-20",
+                                     "20-35",
+                                     "35-50",
+                                     "50-100",
+                                     "100-150",
+                                     "150-200",
+                                     "200-300",
+                                     "300-600",
+                                     ">600"))) %>%
+  mutate(inzidenzfactor=factor(as.character(inzidenzfactor),levels=levels(inzidenzfactor))) %>% 
+  mutate(Altersgruppe = as.factor(Altersgruppe)) %>% 
+  mutate(Altersgruppe = factor(Altersgruppe,levels(Altersgruppe)[c(1,10,2,3,4,5,6,7,8,9,11:20)]))
+```
+
+
+```{r RKI_Wochen_Inzidenz_plott}
+ggplotly(
+Altersverteilung_Plot %>% 
+  ggplot(aes(y = Altersgruppe, x = Kalenderwoche, fill = inzidenzfactor))+
+  geom_tile(colour="white",size=0.2)+
+  scale_y_discrete(expand=c(0,0))+
+  scale_fill_manual(values=c("#cfcfe8","#a6bddc","#7cacd2","#a7c883","#e4ef26","#fee600","#febd00","#fb8800","#fd3c00","#f40001","#be0000","#8b0101"))+
+  labs(x="Kalenderwoche",
+       y="",
+       fill = "Inzidenzen",
+       title = "Wöchentliche COVID-19-Inzidenz (pro 100.000)")+
+  theme_grey(base_size=10)+
+  theme(legend.position="right",legend.direction="horizontal", legend.box = "horizontal",
+          legend.title=element_text(colour=textcol),
+          legend.margin=margin(grid::unit(0,"cm")),
+          legend.text=element_text(colour=textcol,size=7,face="bold"),
+          legend.key.height=grid::unit(0.8,"cm"),
+          legend.key.width=grid::unit(0.2,"cm"),
+          axis.text.x=element_text(size=9,colour=textcol,angle=45,hjust=1),
+          axis.text.y=element_text(vjust=0.2,colour=textcol),
+          axis.ticks=element_line(size=0.4),
+          plot.background=element_blank(),
+          panel.border=element_blank(),
+          plot.margin=margin(0.7,0.4,0.1,0.2,"cm"),
+          plot.title=element_text(colour=textcol,hjust=0,size=14,face="bold"))+
+  geom_text(aes(y= Altersgruppe,label=round(inzidenz,digits = 0)),
+            size = 2.5)
+)
+```
+
+
+```{r RKI_Wochen_Inzidenz}
+```
+
+
+
+
 
 ```{r beep}
 beepr::beep(1)
