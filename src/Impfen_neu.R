@@ -78,12 +78,20 @@ if (is_in_dir == FALSE) {
     
     
     # Umbenannten Datensatz 'geladen.xlsx', jetzt "RKI_Impfquote_COVID19_",Sys.Date(),".xlsx", laden und in RKI_Impf_heute_blatt_2/3/4 laden
+    # header_blatt_2 <- c("rs", "bundesland",
+    #             "insgesamt_über_alle_impfstellen_gesamtzahl_bisher_verabreichter_impfungen","insgesamt_über_alle_impfstellen_gesamtzahl_einmalig_geimpft","insgesamt_über_alle_impfstellen_gesamtzahl_vollständig_geimpft",
+    #             "insgesamt_über_alle_impfstellen_impfquote_mit_einer_impfung_gesmat","insgesamt_über_alle_impfstellen_impfquote_mit_einer_impfung_<60_jahre","insgesamt_über_alle_impfstellen_impfquote_mit_einer_impfung_60+_jahre",
+    #             "insgesamt_über_alle_impfstellen_impfquote_vollständig_geimpft_gesmat","insgesamt_über_alle_impfstellen_impfquote_vollständig_geimpft_<60_jahre","insgesamt_über_alle_impfstellen_impfquote_vollständig_geimpft_60+_jahre",
+    #             "impfungen_in_impfzentren_mobilen_teams_und_krankenhäusern_eine_impfung_<60_jahre","impfungen_in_impfzentren_mobilen_teams_und_krankenhäusern_eine_impfung_60+_jahre", "impfungen_in_impfzentren_mobilen_teams_und_krankenhäusern_vollständig_geimpft_<60_jahre","impfungen_in_impfzentren_mobilen_teams_und_krankenhäusern_vollständig_geimpft_60+_jahre",
+    #             "impfungen_bei_niedergelassenen_ärzten_eine_impfung_<60_jahre","impfungen_bei_niedergelassenen_ärzten_eine_impfung_60+_jahre", "impfungen_bei_niedergelassenen_ärzten_vollständig_geimpft_<60_jahre","impfungen_bei_niedergelassenen_ärzten_vollständig_geimpft_60+_jahre")
+    # 
+    
+    
+    # Umbenannten Datensatz 'geladen.xlsx', jetzt "RKI_Impfquote_COVID19_",Sys.Date(),".xlsx", laden und in RKI_Impf_heute_blatt_2/3/4 laden
     header_blatt_2 <- c("rs", "bundesland",
-                "insgesamt_über_alle_impfstellen_gesamtzahl_bisher_verabreichter_impfungen","insgesamt_über_alle_impfstellen_gesamtzahl_einmalig_geimpft","insgesamt_über_alle_impfstellen_gesamtzahl_vollständig_geimpft",
-                "insgesamt_über_alle_impfstellen_impfquote_mit_einer_impfung_gesmat","insgesamt_über_alle_impfstellen_impfquote_mit_einer_impfung_<60_jahre","insgesamt_über_alle_impfstellen_impfquote_mit_einer_impfung_60+_jahre",
-                "insgesamt_über_alle_impfstellen_impfquote_vollständig_geimpft_gesmat","insgesamt_über_alle_impfstellen_impfquote_vollständig_geimpft_<60_jahre","insgesamt_über_alle_impfstellen_impfquote_vollständig_geimpft_60+_jahre",
-                "impfungen_in_impfzentren_mobilen_teams_und_krankenhäusern_eine_impfung_<60_jahre","impfungen_in_impfzentren_mobilen_teams_und_krankenhäusern_eine_impfung_60+_jahre", "impfungen_in_impfzentren_mobilen_teams_und_krankenhäusern_vollständig_geimpft_<60_jahre","impfungen_in_impfzentren_mobilen_teams_und_krankenhäusern_vollständig_geimpft_60+_jahre",
-                "impfungen_bei_niedergelassenen_ärzten_eine_impfung_<60_jahre","impfungen_bei_niedergelassenen_ärzten_eine_impfung_60+_jahre", "impfungen_bei_niedergelassenen_ärzten_vollständig_geimpft_<60_jahre","impfungen_bei_niedergelassenen_ärzten_vollständig_geimpft_60+_jahre")
+                        "gesamtzahl_bisher_verabreichter_impfungen","gesamtzahl_mindestens_einmal_geimpft","gesamtzahl_vollständig_geimpft",
+                        "impfquote_mindestens_einmal_geimpft_gesamt","impfquote_mindestens_einmal_geimpft_<18_jahre","impfquote_mindestens_einmal_geimpft_18-59_jahre","insgesamt_über_alle_impfstellen_impfquote_mit_einer_impfung_60+_jahre",
+                        "impfquote_vollständig_geimpft_gesamt","impfquote_vollständig_geimpft_<18_jahre","impfquote_vollständig_geimpft_18-59_jahre","impfquote_vollständig_geimpft_60+_jahre")
     
     
 
@@ -115,12 +123,17 @@ if (is_in_dir == FALSE) {
     
     
     # Umbenannten Datensatz 'geladen.xlsx', jetzt "RKI_Impfquote_COVID19_",Sys.Date(),".xlsx", laden und in RKI_Impf_heute_blatt_2/3/4 laden
+    # header_blatt_3 <- c("rs", "bundesland",
+    #                     "impfungen_in_impfzentren_mobilen_teams_krankenhäusern_eine_impfung_impfungen_kumulativ_gesamt","impfungen_in_impfzentren_mobilen_teams_krankenhäusern_eine_impfung_impfungen_kumulativ_biontech","impfungen_in_impfzentren_mobilen_teams_krankenhäusern_eine_impfung_impfungen_kumulativ_moderna","impfungen_in_impfzentren_mobilen_teams_krankenhäusern_eine_impfung_impfungen_kumulativ_astrazeneca","impfungen_in_impfzentren_mobilen_teams_krankenhäusern_eine_impfung_differenz_zum_Vortag",									
+    #                     "impfungen_in_impfzentren_mobilen_teams_krankenhäusern_vollständig_geimpft_impfungen_kumulativ_gesamt","impfungen_in_impfzentren_mobilen_teams_krankenhäusern_vollständig_geimpft_impfungen_kumulativ_biontech","impfungen_in_impfzentren_mobilen_teams_krankenhäusern_vollständig_geimpft_impfungen_kumulativ_moderna","impfungen_in_impfzentren_mobilen_teams_krankenhäusern_vollständig_geimpft_impfungen_kumulativ_astrazeneca","impfungen_in_impfzentren_mobilen_teams_krankenhäusern_vollständig_geimpft_impfungen_kumulativ_janssen","impfungen_in_impfzentren_mobilen_teams_krankenhäusern_vollständig_geimpft_differenz_zum_Vortag",									
+    #                     "impfungen_bei_niedergelassenen_ärzten_eine_impfung_impfungen_kumulativ_gesamt","impfungen_bei_niedergelassenen_ärzten_eine_impfung_impfungen_kumulativ_biontech","impfungen_bei_niedergelassenen_ärzten_eine_impfung_impfungen_kumulativ_moderna","impfungen_bei_niedergelassenen_ärzten_eine_impfung_impfungen_kumulativ_astrazeneca","impfungen_bei_niedergelassenen_ärzten_eine_impfung_differenz_zum_Vortag",									
+    #                     "impfungen_bei_niedergelassenen_ärzten_vollständig_geimpft_impfungen_kumulativ_gesamt","impfungen_bei_niedergelassenen_ärzten_vollständig_geimpft_impfungen_kumulativ_biontech","impfungen_bei_niedergelassenen_ärzten_vollständig_geimpft_impfungen_kumulativ_moderna","impfungen_bei_niedergelassenen_ärzten_vollständig_geimpft_impfungen_kumulativ_astrazeneca","impfungen_bei_niedergelassenen_ärzten_vollständig_geimpft_impfungen_kumulativ_janssen","impfungen_bei_niedergelassenen_ärzten_vollständig_geimpft_differenz_zum_Vortag")
+
+    
+    # Umbenannten Datensatz 'geladen.xlsx', jetzt "RKI_Impfquote_COVID19_",Sys.Date(),".xlsx", laden und in RKI_Impf_heute_blatt_2/3/4 laden
     header_blatt_3 <- c("rs", "bundesland",
-                        "impfungen_in_impfzentren_mobilen_teams_krankenhäusern_eine_impfung_impfungen_kumulativ_gesamt","impfungen_in_impfzentren_mobilen_teams_krankenhäusern_eine_impfung_impfungen_kumulativ_biontech","impfungen_in_impfzentren_mobilen_teams_krankenhäusern_eine_impfung_impfungen_kumulativ_moderna","impfungen_in_impfzentren_mobilen_teams_krankenhäusern_eine_impfung_impfungen_kumulativ_astrazeneca","impfungen_in_impfzentren_mobilen_teams_krankenhäusern_eine_impfung_differenz_zum_Vortag",									
-                        "impfungen_in_impfzentren_mobilen_teams_krankenhäusern_vollständig_geimpft_impfungen_kumulativ_gesamt","impfungen_in_impfzentren_mobilen_teams_krankenhäusern_vollständig_geimpft_impfungen_kumulativ_biontech","impfungen_in_impfzentren_mobilen_teams_krankenhäusern_vollständig_geimpft_impfungen_kumulativ_moderna","impfungen_in_impfzentren_mobilen_teams_krankenhäusern_vollständig_geimpft_impfungen_kumulativ_astrazeneca","impfungen_in_impfzentren_mobilen_teams_krankenhäusern_vollständig_geimpft_impfungen_kumulativ_janssen","impfungen_in_impfzentren_mobilen_teams_krankenhäusern_vollständig_geimpft_differenz_zum_Vortag",									
-                        "impfungen_bei_niedergelassenen_ärzten_eine_impfung_impfungen_kumulativ_gesamt","impfungen_bei_niedergelassenen_ärzten_eine_impfung_impfungen_kumulativ_biontech","impfungen_bei_niedergelassenen_ärzten_eine_impfung_impfungen_kumulativ_moderna","impfungen_bei_niedergelassenen_ärzten_eine_impfung_impfungen_kumulativ_astrazeneca","impfungen_bei_niedergelassenen_ärzten_eine_impfung_differenz_zum_Vortag",									
-                        "impfungen_bei_niedergelassenen_ärzten_vollständig_geimpft_impfungen_kumulativ_gesamt","impfungen_bei_niedergelassenen_ärzten_vollständig_geimpft_impfungen_kumulativ_biontech","impfungen_bei_niedergelassenen_ärzten_vollständig_geimpft_impfungen_kumulativ_moderna","impfungen_bei_niedergelassenen_ärzten_vollständig_geimpft_impfungen_kumulativ_astrazeneca","impfungen_bei_niedergelassenen_ärzten_vollständig_geimpft_differenz_zum_Vortag")
-                       
+                        "mindestens_einmal_geimpft_impfungen_kumulativ_gesamt","mindestens_einmal_geimpft_impfungen_kumulativ_biontech","mindestens_einmal_geimpft_impfungen_kumulativ_moderna","mindestens_einmal_geimpft_impfungen_kumulativ_astrazeneca","mindestens_einmal_geimpft_impfungen_kumulativ_janssen","mindestens_einmal_geimpft_differenz_zum_Vortag",
+                        "vollständig_geimpftimpfungen_kumulativ_gesamt","vollständig_geimpftimpfungen_kumulativ_biontech","vollständig_geimpftimpfungen_kumulativ_moderna","vollständig_geimpftimpfungen_kumulativ_astrazeneca","vollständig_geimpftimpfungen_kumulativ_janssen","vollständig_geimpftdifferenz_zum_Vortag")
     
     
     RKI_Impf_heute_blatt_3 <-
@@ -162,14 +175,17 @@ if (is_in_dir == FALSE) {
         sheet = 4,
         col_names = header_blatt_4,
         skip = 1,
-        n_max = Inf))
+        n_max = Inf)) 
     
     RKI_Impf_heute_blatt_4 <- RKI_Impf_heute_blatt_4 %>% 
-      head(-4) %>% 
+#      head(-4) %>% 
       rename(date = datum) %>% 
-      mutate(date = excel_numeric_to_date(as.numeric(date))) 
-    
-    # Clean Data
+#      mutate(date = excel_numeric_to_date(as.numeric(date))) %>% 
+      mutate(date = lubridate::dmy(date)) %>% 
+      drop_na(date) %>%
+        head(-1) # aktuell nötig weil irgendwas in der letzten zeile schief läuft. letzte datum steht immer doppelt da. 
+
+     # Clean Data
     RKI_Impf_heute_blatt_4 <- RKI_Impf_heute_blatt_4 %>%
       clean_names() 
     

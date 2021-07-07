@@ -81,8 +81,9 @@ RKI_Impfzahlen_datum_daten_monitor <- daten_monitor %>%
 # Prüfen, ob es schon ein neuer Tag ist und ob es später als 10 Uhr ist. Wenn beides warh ist, wird das sktip zum Laden der Fallzahlen aktiviert.
 # Wenn es dann einen neuen Datensatz gibt, wird in der Monitor Datei das Datum von heute geschrieben und die Neu Variable auf 1 gesetzt.
 # Wenn es keinen neuen Datensatz gibt, wird eine Nachricht drüber zurück gegeben.
+# Wenn es Sonntag wird der Skript nicht gestartet, da Sonntag keine Impfzahlen gibt. 
 if (RKI_Impfzahlen_datum_daten_monitor != Sys.Date() &
-    format(Sys.time(), "%X") > "08:00:00") {
+    format(Sys.time(), "%X") > "08:00:00" & weekdays(as.Date(Sys.Date())) != "Sonntag") {
   message("Es wird geschaut, ob es schon neue RKI-Impfzahlen gibt")
   
   
@@ -103,17 +104,32 @@ if (RKI_Impfzahlen_datum_daten_monitor != Sys.Date() &
   } else {
     message("RKI-Impfzahlen sind noch aktuell! \n")
   }
+  
+  
 } else {
-  # Wenn es früher als 6 Uhr ist, wird diese Nachricht gezeigt
-  if (format(Sys.time(), "%X") < "08:00:00") {
-    message("RKI-Impfzahlen sind noch aktuell und werden ab 08:00 Uhr aktualisiert. \n")
+  
+  #Wenn es sonntag ist diese Nachricht:
+  if (weekdays(as.Date(Sys.Date())) == "Sonntag"){
+    message("RKI-Impfzahlen werden Sonntags nicht aktualisiert. \n")
   }
   
-  # Wenn es später als 6 Uhr ist, wird diese Nachricht gezeigt
-  if (format(Sys.time(), "%X") > "08:00:00") {
-    message("RKI-Impfzahlen sind aktuell! \n")
+  
+  # Wenn es nicht Sonntag ist diese Nachichten: 
+  if (weekdays(as.Date(Sys.Date())) != "Sonntag"){
+    
+  
+    # Wenn es früher als 6 Uhr ist, wird diese Nachricht gezeigt
+    if (format(Sys.time(), "%X") < "08:00:00") {
+      message("RKI-Impfzahlen sind noch aktuell und werden ab 08:00 Uhr aktualisiert. \n")
+    }
+    
+    # Wenn es später als 6 Uhr ist, wird diese Nachricht gezeigt
+    if (format(Sys.time(), "%X") > "08:00:00") {
+      message("RKI-Impfzahlen sind aktuell! \n")
+    }
   }
 }
+  
 
 
 
@@ -131,7 +147,7 @@ DIVI_Intensiv_datum_daten_monitor <- daten_monitor %>%
 # Wenn es dann einen neuen Datensatz gibt, wird in der Monitor Datei das Datum von heute geschrieben und die Neu Variable auf 1 gesetzt.
 # Wenn es keinen neuen Datensatz gibt, wird eine Nachricht drüber zurück gegeben.
 if (DIVI_Intensiv_datum_daten_monitor != Sys.Date() &
-    format(Sys.time(), "%X") > "12:00:00") {
+    format(Sys.time(), "%X") > "12:30:00") {
   message("Es wird geschaut, ob es schon neue DIVI-Intensiv zahlen gibt")
   
   
@@ -154,12 +170,12 @@ if (DIVI_Intensiv_datum_daten_monitor != Sys.Date() &
   }
 } else {
   # Wenn es früher als 12 Uhr ist, wird diese Nachricht gezeigt
-  if (format(Sys.time(), "%X") < "12:00:00") {
-    message("DIVI-Intensiv sind noch aktuell und werden ab 12:00 Uhr aktualisiert.")
+  if (format(Sys.time(), "%X") < "12:30:00") {
+    message("DIVI-Intensiv sind noch aktuell und werden ab 12:30 Uhr aktualisiert.  \n")
   }
   
   # Wenn es später als 12 Uhr ist, wird diese Nachricht gezeigt
-  if (format(Sys.time(), "%X") > "08:00:00") {
+  if (format(Sys.time(), "%X") > "12:30:00") {
     message("DIVI-Intensivzahlen sind aktuell! \n")
   }
 }
@@ -179,17 +195,17 @@ RKI_R_Wert_datum_daten_monitor <- daten_monitor %>%
 # Wenn es dann einen neuen Datensatz gibt, wird in der Monitor Datei das Datum von heute geschrieben und die Neu Variable auf 1 gesetzt.
 # Wenn es keinen neuen Datensatz gibt, wird eine Nachricht drüber zurück gegeben.
 if (RKI_R_Wert_datum_daten_monitor != Sys.Date() &
-    format(Sys.time(), "%X") > "08:00:00") {
+    format(Sys.time(), "%X") > "17:00:00") {
   message("Es wird geschaut, ob es schon neue RKI_R-Werte gibt")
   
   
   
-  source("~/Documents/RStudio_Projekte/CoronaDashboard/src/divi_intensiv.R")
+  source("~/Documents/RStudio_Projekte/CoronaDashboard/src/RWert.R")
   
   
   
   if ( as.Date(file.info(here("data/RKI_RWert/working/RKI_RWert_heute.csv"))$ctime) == Sys.Date() ) {
-    RKI_RWert_ctime <- as.Date(file.info(here("data/RKI_RWert/working/RKI_RWert_heute.csv"))$ctime) == Sys.Date()
+    RKI_RWert_ctime <- as.Date(file.info(here("data/RKI_RWert/working/RKI_RWert_heute.csv"))$ctime) 
     
     daten_monitor[4, "version"] <- RKI_RWert_ctime
     daten_monitor[4, "neu"] <- 1
@@ -202,18 +218,15 @@ if (RKI_R_Wert_datum_daten_monitor != Sys.Date() &
   }
 } else {
   # Wenn es früher als 08 Uhr ist, wird diese Nachricht gezeigt
-  if (format(Sys.time(), "%X") < "12:00:00") {
-    message("RKI_R-Werte sind noch aktuell und werden ab 08:00 Uhr aktualisiert.")
+  if (format(Sys.time(), "%X") < "17:00:00") {
+    message("RKI_R-Werte sind noch aktuell und werden ab 17:00 Uhr aktualisiert.")
   }
   
   # Wenn es später als 08 Uhr ist, wird diese Nachricht gezeigt
-  if (format(Sys.time(), "%X") > "08:00:00") {
+  if (format(Sys.time(), "%X") > "17:00:00") {
     message("RKI_R-Werte sind aktuell! \n")
   }
 }
-
-
-##################
 
 
 
@@ -241,6 +254,8 @@ if (sum(daten_monitor$neu) > 0) {
     daten_monitor[2, "neu"] <- 0
     # DIVI_Intensiv 
     daten_monitor[3, "neu"] <- 0
+    # RKI_R-Wert
+    daten_monitor[4, "neu"] <- 0
     
     speichern_laden(daten_monitor, "src/daten_monitor.csv")
     

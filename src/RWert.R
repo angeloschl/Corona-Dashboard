@@ -11,15 +11,20 @@ suppressMessages(library(lubridate))
 
 
 url <- "https://www.rki.de/DE/Content/InfAZ/N/Neuartiges_Coronavirus/Projekte_RKI/Nowcasting_Zahlen_csv.csv?__blob=publicationFile"
- 
+url <- "https://raw.githubusercontent.com/robert-koch-institut/SARS-CoV-2-Nowcasting_und_-R-Schaetzung/main/Nowcast_R_aktuell.csv"
 
 # Daten vom Server holen und in RKI_Impf_geladen schreiben
 curl::curl_download(url, destfile = here("data/RKI_RWert/working/geladen.csv"))
 
 #Achtung. Bei den Daten vom RKI wird das datum mit punkten getretnnt. 01.01.2021. Dass geht mit read_csv nicht. 
-RKI_RWert_geladen <- suppressMessages(read_csv2(here("data/RKI_RWert/working/geladen.csv")))%>% 
-  drop_na() %>% 
-  mutate(Datum = as.Date(Datum, "%d.%m.%Y"))
+# RKI_RWert_geladen <- suppressMessages(read_csv2(here("data/RKI_RWert/working/geladen.csv")
+#                                                ,  local = locale(encoding = "latin1") # Wenn ERROR die Zeile ausklammern
+#                                                 ))%>% 
+#   select(c(1:13)) %>% 
+#   drop_na() %>% 
+#   mutate(Datum = as.Date(Datum, "%d.%m.%Y"))
+
+RKI_RWert_geladen <- suppressMessages(read_csv(here("data/RKI_RWert/working/geladen.csv")))
 
 RKI_RWert_alt <- suppressMessages(read_csv(here("data/RKI_RWert/working/RKI_RWert_heute.csv"))) %>% 
   drop_na() 
