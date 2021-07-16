@@ -62,7 +62,7 @@ AusPunktKommaMachen <- function(x){
 VergleichVortagePfeil <- function(data, Reihe, Anzahl = 5, reverse = TRUE) {
   Data <- data %>%
     select({{ Reihe }}) %>%
-    mutate(t = as.numeric(AusPunktKommaMachen({{ Reihe }}))) %>%
+    mutate(t = {{ Reihe }}) %>%
     mutate(t_minus_1 = lag(t)) %>%
     drop_na() %>%
     mutate(vergleich = ifelse(t > t_minus_1, "+", ifelse(t == t_minus_1, "=", "-"))) %>%
