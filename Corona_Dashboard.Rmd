@@ -329,10 +329,10 @@ valueBox(
   color = ifelse(DIVI_Intensiv_heute>DIVI_Intensiv_sieben_tage_durchschnitt,"#cd6689","#66CDAA"))
 ```
 
+
+```{r RWert_vier_Tage, eval=FALSE, include=FALSE}
+
 ### RWert_vier_Tage
-
-```{r RWert_vier_Tage}
-
 
 RWert_vier_Tage <- RKI_R_Wert %>% 
   select(Datum,PS_4_Tage_R_Wert ) %>% 
