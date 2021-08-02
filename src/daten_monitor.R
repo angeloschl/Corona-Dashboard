@@ -8,10 +8,11 @@ suppressMessages(library(tidyverse))
 
 speichern_laden <- function(x, y) {
   # Speichert die Datei
-  write.csv(x, here(y), row.names = F)
+  write_csv(daten_monitor, here(y)) # Hier entsteht ein fehler, wenn ich anstatt daten_montir x schreibe stürzt seit neustem R ab. Oder ich kann auch here() durch den korrekten Pfad ersetzten, dann stützr r auch nicht ab. Verstehe ich nicht, sehr komisch. 
   # läd die Datei neu in den Speicher
-  x <- suppressMessages(read_csv(here(y)))
+  x <- read_csv(here(y))
 }
+
 
 
 daten_monitor <- suppressMessages(read_csv(here("src/daten_monitor.csv")))
@@ -45,13 +46,17 @@ if (RKI_Fallzahl_datum_daten_monitor != Sys.Date() &
 
 
   if (file.exists(paste0(here("data/RKI/working/RKI_COVID19_"), Sys.Date(), ".csv"))) {
+    
     RKI_Fallzahlen_ctime <- as.Date(file.info(paste0(here("data/RKI/working/RKI_COVID19_"), Sys.Date(), ".csv"))$ctime)
 
     daten_monitor[1, "version"] <- RKI_Fallzahlen_ctime
     daten_monitor[1, "neu"] <- 1
-
+    
     speichern_laden(daten_monitor, "src/daten_monitor.csv")
 
+    
+    
+    
     message("RKI-Fallzahlen von heute wurden geladen. \n")
   } else {
     message("RKI-Fallzahlen sind noch aktuell! \n")
@@ -99,6 +104,7 @@ if (RKI_Impfzahlen_datum_daten_monitor != Sys.Date() &
     daten_monitor[2, "neu"] <- 1
     
     speichern_laden(daten_monitor, "src/daten_monitor.csv")
+
     
     message("RKI-Impfzahlen von heute wurden geladen. \n")
   } else {
@@ -163,6 +169,7 @@ if (DIVI_Intensiv_datum_daten_monitor != Sys.Date() &
     daten_monitor[3, "neu"] <- 1
     
     speichern_laden(daten_monitor, "src/daten_monitor.csv")
+
     
     message("DIVI-Intensiv von heute wurden geladen. \n")
   } else {
@@ -211,6 +218,7 @@ if (RKI_R_Wert_datum_daten_monitor != Sys.Date() &
     daten_monitor[4, "neu"] <- 1
     
     speichern_laden(daten_monitor, "src/daten_monitor.csv")
+
     
     message("RKI_R-Werte von heute wurden geladen. \n")
   } else {
@@ -258,6 +266,7 @@ if (sum(daten_monitor$neu) > 0) {
     daten_monitor[4, "neu"] <- 0
     
     speichern_laden(daten_monitor, "src/daten_monitor.csv")
+
     
     message("Daten Monitor wurde auf Null gesetzt. \n")
     
@@ -275,5 +284,3 @@ if (sum(daten_monitor$neu) > 0) {
 message("")
 time_end <- Sys.time()
 print(round(time_end - time_start))
-
-
