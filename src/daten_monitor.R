@@ -8,9 +8,10 @@ suppressMessages(library(tidyverse))
 
 speichern_laden <- function(x, y) {
   # Speichert die Datei
-  write_csv(daten_monitor, here(y)) # Hier entsteht ein fehler, wenn ich anstatt daten_montir x schreibe stürzt seit neustem R ab. Oder ich kann auch here() durch den korrekten Pfad ersetzten, dann stützr r auch nicht ab. Verstehe ich nicht, sehr komisch. 
+  write_csv(daten_monitor, here(y)) 
+
   # läd die Datei neu in den Speicher
-  x <- read_csv(here(y))
+  x <- suppressMessages(read_csv(here(y)))
 }
 
 
