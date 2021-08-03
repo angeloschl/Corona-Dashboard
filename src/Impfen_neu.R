@@ -182,8 +182,8 @@ if (is_in_dir == FALSE) {
       rename(date = datum) %>% 
 #      mutate(date = excel_numeric_to_date(as.numeric(date))) %>% 
       mutate(date = lubridate::dmy(date)) %>% 
-      drop_na(date) %>%
-        head(-1) # aktuell nötig weil irgendwas in der letzten zeile schief läuft. letzte datum steht immer doppelt da. 
+      drop_na(date) 
+#        head(-1) # aktuell nötig weil irgendwas in der letzten zeile schief läuft. letzte datum steht immer doppelt da. 
 
      # Clean Data
     RKI_Impf_heute_blatt_4 <- RKI_Impf_heute_blatt_4 %>%
