@@ -7,7 +7,9 @@ suppressMessages(library(janitor))
 suppressMessages(library(tidyverse))
 
 
-url <- "https://www.rki.de/DE/Content/InfAZ/N/Neuartiges_Coronavirus/Daten/Impfquotenmonitoring.xlsx;jsessionid=191B8B9B966E7F09BCCCF72ABE990854.internet081?__blob=publicationFile"
+# url <- "https://www.rki.de/DE/Content/InfAZ/N/Neuartiges_Coronavirus/Daten/Impfquotenmonitoring.xlsx;jsessionid=191B8B9B966E7F09BCCCF72ABE990854.internet081?__blob=publicationFile"
+url <- "https://www.rki.de/DE/Content/InfAZ/N/Neuartiges_Coronavirus/Daten/Impfquotenmonitoring.xlsx?__blob=publicationFile"
+
 
 # Daten vom Server holen und in RKI_Impf_geladen schreiben
 curl::curl_download(url, destfile = here("data/RKI_Impf/working/geladen.xlsx"))
@@ -89,9 +91,10 @@ if (is_in_dir == FALSE) {
     
     # Umbenannten Datensatz 'geladen.xlsx', jetzt "RKI_Impfquote_COVID19_",Sys.Date(),".xlsx", laden und in RKI_Impf_heute_blatt_2/3/4 laden
     header_blatt_2 <- c("rs", "bundesland",
-                        "gesamtzahl_bisher_verabreichter_impfungen","gesamtzahl_mindestens_einmal_geimpft","gesamtzahl_vollständig_geimpft",
-                        "impfquote_mindestens_einmal_geimpft_gesamt","impfquote_mindestens_einmal_geimpft_<18_jahre","impfquote_mindestens_einmal_geimpft_18-59_jahre","insgesamt_über_alle_impfstellen_impfquote_mit_einer_impfung_60+_jahre",
-                        "impfquote_vollständig_geimpft_gesamt","impfquote_vollständig_geimpft_<18_jahre","impfquote_vollständig_geimpft_18-59_jahre","impfquote_vollständig_geimpft_60+_jahre")
+                        "gesamtzahl_bisher_verabreichter_impfungen","gesamtzahl_mindestens_einmal_geimpft","gesamtzahl_vollständig_geimpft","gesamtzahl_personen_mit_auffrischungsimpfung",
+                        "impfquote_mindestens_einmal_geimpft_gesamt","impfquote_mindestens_einmal_geimpft_12-17_jahre","impfquote_mindestens_einmal_geimpft_>18_jahre_gesamt","impfquote_mindestens_einmal_geimpft_>18_jahre_18-59_jahre","impfquote_mindestens_einmal_geimpft_>18_jahre_60+_jahre",
+                        "impfquote_vollständig_geimpft_gesamt","impfquote_vollständig_geimpft_12-17_jahre","impfquote_vollständig_geimpft_>18_jahre_gesamt","impfquote_vollständig_geimpft_>18_jahre_18-59_jahre","impfquote_vollständig_geimpft_>18_jahre_60+_jahre",
+                        "")
     
     
 
@@ -131,16 +134,16 @@ if (is_in_dir == FALSE) {
 
     
     # Umbenannten Datensatz 'geladen.xlsx', jetzt "RKI_Impfquote_COVID19_",Sys.Date(),".xlsx", laden und in RKI_Impf_heute_blatt_2/3/4 laden
-    header_blatt_3 <- c("rs", "bundesland",
-                        "mindestens_einmal_geimpft_impfungen_kumulativ_gesamt","mindestens_einmal_geimpft_impfungen_kumulativ_biontech","mindestens_einmal_geimpft_impfungen_kumulativ_moderna","mindestens_einmal_geimpft_impfungen_kumulativ_astrazeneca","mindestens_einmal_geimpft_impfungen_kumulativ_janssen","mindestens_einmal_geimpft_differenz_zum_Vortag",
-                        "vollständig_geimpftimpfungen_kumulativ_gesamt","vollständig_geimpftimpfungen_kumulativ_biontech","vollständig_geimpftimpfungen_kumulativ_moderna","vollständig_geimpftimpfungen_kumulativ_astrazeneca","vollständig_geimpftimpfungen_kumulativ_janssen","vollständig_geimpftdifferenz_zum_Vortag")
+    # header_blatt_3 <- c("rs", "bundesland",
+    #                     "mindestens_einmal_geimpft_impfungen_kumulativ_gesamt","mindestens_einmal_geimpft_impfungen_kumulativ_biontech","mindestens_einmal_geimpft_impfungen_kumulativ_moderna","mindestens_einmal_geimpft_impfungen_kumulativ_astrazeneca","mindestens_einmal_geimpft_impfungen_kumulativ_janssen","mindestens_einmal_geimpft_differenz_zum_Vortag",
+    #                     "vollständig_geimpftimpfungen_kumulativ_gesamt","vollständig_geimpftimpfungen_kumulativ_biontech","vollständig_geimpftimpfungen_kumulativ_moderna","vollständig_geimpftimpfungen_kumulativ_astrazeneca","vollständig_geimpftimpfungen_kumulativ_janssen","vollständig_geimpftdifferenz_zum_Vortag")
     
     
     RKI_Impf_heute_blatt_3 <-
       suppressMessages(read_excel(paste0(
         here("data/RKI_Impf/working/RKI_Impfquote_COVID19_"), Sys.Date(), ".xlsx"),
         sheet = 3,
-        col_names = header_blatt_3,
+#        col_names = header_blatt_3,
         skip = 4,
         n_max = 18))
     
@@ -166,7 +169,7 @@ if (is_in_dir == FALSE) {
     
     
     # Umbenannten Datensatz 'geladen.xlsx', jetzt "RKI_Impfquote_COVID19_",Sys.Date(),".xlsx", laden und in RKI_Impf_heute_blatt_2/3/4 laden
-    header_blatt_4 <- c("datum",	"erstimpfung",	"zweitimpfung",	"gesamtzahl_verabreichter_impfstoffdosen")
+    header_blatt_4 <- c("datum",	"erstimpfung",	"zweitimpfung","Auffrischungsimpfung",	"gesamtzahl_verabreichter_impfstoffdosen")
     
     
     RKI_Impf_heute_blatt_4 <-
