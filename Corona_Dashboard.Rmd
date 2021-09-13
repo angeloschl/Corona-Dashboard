@@ -130,7 +130,7 @@ RKI_R_Wert <- read_csv(here("data/RKI_RWert/working/RKI_RWert_heute.csv"))
 }
 
 if (!exists("RKI_Wochen_Inzidenz")) {
-RKI_Wochen_Inzidenz <- read_excel(here("data/RKI_WochenInzidenz/Altersverteilung.xlsx"),sheet = 1)
+RKI_Wochen_Inzidenz <- read_excel(here("data/RKI_WochenInzidenz/Altersverteilung.xlsx"),sheet = 2)
 }
 
 
@@ -298,6 +298,28 @@ valueBox(
   caption = glue::glue("Anzahl aller Geimpften (Stand {RKI_Impf_gestern$date +1})"),
   color = "#66cccc")
 ```
+
+
+### Impfqoute Zweitimpfung
+
+```{r Impfqoute Zweitimpfung}
+RKI_Impf_Summe_Zweitimpfungen <- sum(RKI_Impf_heute_blatt_4$zweitimpfung,na.rm = TRUE)
+RKI_Impf_Summe_Zweitimpfungen <- RKI_Impf_heute_blatt_2 %>% 
+  filter(bundesland == "Gesamt") %>% 
+  mutate(impfquote_vollstandig_geimpft_gesamt = as.numeric(impfquote_vollstandig_geimpft_gesamt)) %>% 
+  .$impfquote_vollstandig_geimpft_gesamt
+
+
+
+valueBox(
+  glue::glue("{NummernMitPunkt(round(RKI_Impf_Summe_Zweitimpfungen,2),digits = 2)}%"),
+  icon = "fa-percent",
+  caption = glue::glue("Anzahl vollständig geimpfter (Stand {RKI_Impf_gestern$date +1})"),
+  color = "#66cccc")
+```
+
+
+
 
 ## Row {data-height="125"}
 
@@ -719,7 +741,7 @@ RKI_Impf_heute_blatt_4 %>%
 
   ggplot(aes(x = date, y = Anzahl_Impfung, fill = Impfung)) +
     geom_bar(stat="identity", position ="identity",alpha = 0.9) +
-    scale_fill_manual(values=c("#007500","#143b0d")) +
+    scale_fill_manual(values=c("#0d143b","#007500","#143b0d")) +
     labs(x = "",
          y = "Impfungen",
          title = "Anzahl der täglichen Erst- & Zweitimpfungen bundesweit")+
@@ -734,6 +756,8 @@ RKI_Impf_heute_blatt_4 %>%
 ggplotly(
 RKI_Impf_heute_blatt_2 %>% 
   filter(bundesland != "Bundesressorts**") %>% 
+  filter(bundesland != "Impfzentren Bund***") %>% 
+  
   mutate(prozent_geimpft_erste = round(as.numeric(impfquote_mindestens_einmal_geimpft_gesamt)/1,2),
          prozent_geimpft_zweite = round(as.numeric(impfquote_vollstandig_geimpft_gesamt)/1,2),
          bundesland = fct_reorder(bundesland,sort(bundesland,decreasing = T))) %>% 
@@ -826,7 +850,8 @@ Altersverteilung_Plot <- RKI_Wochen_Inzidenz %>%
                                      ">600"))) %>%
   mutate(inzidenzfactor=factor(as.character(inzidenzfactor),levels=levels(inzidenzfactor))) %>% 
   mutate(Altersgruppe = as.factor(Altersgruppe)) %>% 
-  mutate(Altersgruppe = factor(Altersgruppe,levels(Altersgruppe)[c(1,10,2,3,4,5,6,7,8,9,11:20)]))
+  mutate(Altersgruppe = factor(Altersgruppe,levels(Altersgruppe)[c(1,10,2,3,4,5,6,7,8,9,11:20)])) 
+#  mutate(Altersgruppe = factor(Altersgruppe,levels(Altersgruppe)[c(1,18,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,19,20)]))
 ```
 
 
