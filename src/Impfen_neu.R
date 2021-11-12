@@ -94,7 +94,7 @@ if (is_in_dir == FALSE) {
                         "gesamtzahl_bisher_verabreichter_impfungen","gesamtzahl_mindestens_einmal_geimpft","gesamtzahl_vollständig_geimpft","gesamtzahl_personen_mit_auffrischungsimpfung",
                         "impfquote_mindestens_einmal_geimpft_gesamt","impfquote_mindestens_einmal_geimpft_12-17_jahre","impfquote_mindestens_einmal_geimpft_>18_jahre_gesamt","impfquote_mindestens_einmal_geimpft_>18_jahre_18-59_jahre","impfquote_mindestens_einmal_geimpft_>18_jahre_60+_jahre",
                         "impfquote_vollständig_geimpft_gesamt","impfquote_vollständig_geimpft_12-17_jahre","impfquote_vollständig_geimpft_>18_jahre_gesamt","impfquote_vollständig_geimpft_>18_jahre_18-59_jahre","impfquote_vollständig_geimpft_>18_jahre_60+_jahre",
-                        "")
+                        "impfquote_auffrischimpfung_gesamt","impfquote_auffrischimpfung_12-17_jahre","impfquote_auffrischimpfung_>18_jahre_gesamt","impfquote_auffrischimpfung_>18_jahre_18-59_jahre","impfquote_auffrischimpfung_>18_jahre_60+_jahre")
     
     
 

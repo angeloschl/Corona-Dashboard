@@ -16,7 +16,8 @@ is_in_dir <- !file.exists(paste0(here("data/RKI/working/RKI_COVID19_"), Sys.Date
 if (is_in_dir) {
   # Neuen Daten laden
   curl::curl_download(url,
-    destfile = here("data/RKI/original/geladen.csv"))
+    destfile = here("data/RKI/original/geladen.csv"),
+  quiet = TRUE)
 
   RKI_geladen <- suppressMessages(read_csv(here("data/RKI/original/geladen.csv")))
 
