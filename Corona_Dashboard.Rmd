@@ -277,25 +277,18 @@ RKI_Impf_gestern <- RKI_Impf_heute_blatt_4 %>%
   color = "primary")
 ```
 
-### Anzahl aller Geimpften
 
-```{r AnzahlallerGeimpften}
-RKI_Impf_Summe_Erstimpfungen <- sum(RKI_Impf_heute_blatt_4$erstimpfung,na.rm = TRUE)
-
-  valueBox(
-  NummernMitPunkt(RKI_Impf_Summe_Erstimpfungen),
-  icon = "fa-thumbs-o-up",
-  caption = glue::glue("Anzahl aller Erstimpfungen (Stand {RKI_Impf_gestern$date +1})"),
-  color = "info")
-```
 
 ### Impfqoute
 
 ```{r Impfqoute}
+RKI_Impf_Summe_Erstimpfungen <- sum(RKI_Impf_heute_blatt_4$erstimpfung,na.rm = TRUE)
+
+
 valueBox(
-  glue::glue("{NummernMitPunkt(round(RKI_Impf_Summe_Erstimpfungen/EinwohnerzahlBund*100,2),digits = 2)}%"),
+  glue::glue("{NummernMitPunkt(round(RKI_Impf_Summe_Erstimpfungen/EinwohnerzahlBund*100,2),digits = 2)}% / {NummernMitPunkt(RKI_Impf_Summe_Erstimpfungen)}"),
   icon = "fa-percent",
-  caption = glue::glue("Anzahl aller Geimpften (Stand {RKI_Impf_gestern$date +1})"),
+  caption = glue::glue("Anzahl aller Erstimpfungen (Stand {RKI_Impf_gestern$date +1})"),
   color = "#66cccc")
 ```
 
@@ -315,6 +308,24 @@ valueBox(
   glue::glue("{NummernMitPunkt(round(RKI_Impf_Summe_Zweitimpfungen,2),digits = 2)}%"),
   icon = "fa-percent",
   caption = glue::glue("Anzahl vollständig geimpfter (Stand {RKI_Impf_gestern$date +1})"),
+  color = "#66cccc")
+```
+
+
+### Impfqoute Booster
+
+```{r Impfqoute Booster}
+RKI_Impf_Summe_Booster <- RKI_Impf_heute_blatt_2 %>% 
+  filter(bundesland == "Gesamt") %>% 
+  mutate(impfquote_auffrischimpfung_gesamt = as.numeric(impfquote_auffrischimpfung_gesamt)) %>% 
+  .$impfquote_auffrischimpfung_gesamt
+
+
+
+valueBox(
+  glue::glue("{NummernMitPunkt(round(RKI_Impf_Summe_Booster,2),digits = 2)}%"),
+  icon = "fa-percent",
+  caption = glue::glue("Anzahl Booster Impfung (Stand {RKI_Impf_gestern$date +1})"),
   color = "#66cccc")
 ```
 
