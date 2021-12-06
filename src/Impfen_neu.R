@@ -103,7 +103,7 @@ if (is_in_dir == FALSE) {
         here("data/RKI_Impf/working/RKI_Impfquote_COVID19_"), Sys.Date(), ".xlsx"),
         sheet = 2,
         col_names = header_blatt_2,
-        skip = 4,
+        skip = 3,
         n_max = 18))
   
   
