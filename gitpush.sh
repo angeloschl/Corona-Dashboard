@@ -1,5 +1,6 @@
 #!/bin/bash
 
+git status
 git add data/RKI/working/*.zip
 # git add \*.zip
 # git add \*.xlsx
