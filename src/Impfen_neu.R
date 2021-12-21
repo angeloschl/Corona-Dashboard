@@ -91,7 +91,7 @@ if (is_in_dir == FALSE) {
     
     # Umbenannten Datensatz 'geladen.xlsx', jetzt "RKI_Impfquote_COVID19_",Sys.Date(),".xlsx", laden und in RKI_Impf_heute_blatt_2/3/4 laden
     header_blatt_2 <- c("rs", "bundesland",
-                        "gesamtzahl_bisher_verabreichter_impfungen","gesamtzahl_mindestens_einmal_geimpft","gesamtzahl_vollständig_geimpft","gesamtzahl_personen_mit_auffrischungsimpfung",
+                        "gesamtzahl_bisher_verabreichter_impfungen","gesamtzahl_mindestens_einmal_geimpft_gesamt","gesamtzahl_mindestens_einmal_geimpft_davon_5_bis_11","gesamtzahl_vollständig_geimpft","gesamtzahl_personen_mit_auffrischungsimpfung",
                         "impfquote_mindestens_einmal_geimpft_gesamt","impfquote_mindestens_einmal_geimpft_12-17_jahre","impfquote_mindestens_einmal_geimpft_>18_jahre_gesamt","impfquote_mindestens_einmal_geimpft_>18_jahre_18-59_jahre","impfquote_mindestens_einmal_geimpft_>18_jahre_60+_jahre",
                         "impfquote_vollständig_geimpft_gesamt","impfquote_vollständig_geimpft_12-17_jahre","impfquote_vollständig_geimpft_>18_jahre_gesamt","impfquote_vollständig_geimpft_>18_jahre_18-59_jahre","impfquote_vollständig_geimpft_>18_jahre_60+_jahre",
                         "impfquote_auffrischimpfung_gesamt","impfquote_auffrischimpfung_12-17_jahre","impfquote_auffrischimpfung_>18_jahre_gesamt","impfquote_auffrischimpfung_>18_jahre_18-59_jahre","impfquote_auffrischimpfung_>18_jahre_60+_jahre")
