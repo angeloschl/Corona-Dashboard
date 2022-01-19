@@ -299,8 +299,8 @@ valueBox(
 RKI_Impf_Summe_Zweitimpfungen <- sum(RKI_Impf_heute_blatt_4$zweitimpfung,na.rm = TRUE)
 RKI_Impf_Summe_Zweitimpfungen <- RKI_Impf_heute_blatt_2 %>% 
   filter(bundesland == "Gesamt") %>% 
-  mutate(impfquote_vollstandig_geimpft_gesamt = as.numeric(impfquote_vollstandig_geimpft_gesamt)) %>% 
-  .$impfquote_vollstandig_geimpft_gesamt
+  mutate(impfquote_grundimmunisiert_gesamt = as.numeric(impfquote_grundimmunisiert_gesamt)) %>% 
+  .$impfquote_grundimmunisiert_gesamt
 
 
 
@@ -770,7 +770,7 @@ RKI_Impf_heute_blatt_2 %>%
   filter(bundesland != "Impfzentren Bund***") %>% 
   
   mutate(prozent_geimpft_erste = round(as.numeric(impfquote_mindestens_einmal_geimpft_gesamt)/1,2),
-         prozent_geimpft_zweite = round(as.numeric(impfquote_vollstandig_geimpft_gesamt)/1,2),
+         prozent_geimpft_zweite = round(as.numeric(impfquote_grundimmunisiert_gesamt)/1,2),
          bundesland = fct_reorder(bundesland,sort(bundesland,decreasing = T))) %>% 
   ggplot(aes(y = bundesland))+
   scale_x_continuous(labels = function(x) paste0(NummernMitPunkt(x,digits = 1), '%'))+
@@ -845,6 +845,8 @@ Altersverteilung_Plot <- RKI_Wochen_Inzidenz %>%
   
   mutate(woche = fct_reorder(woche,fct_level,.fun = max)) %>% 
   mutate(Kalenderwoche = fct_reorder(Kalenderwoche,fct_level,.fun = max)) %>% 
+  mutate(inzidenz = str_replace(inzidenz,",",".")) %>% # nur wenn , statt . im Datensatz
+  mutate(inzidenz = as.numeric(inzidenz)) %>% # nur wenn , statt . im Datensatz
   # create a new variable from inzidenz
   mutate(inzidenzfactor=cut(inzidenz,breaks=c(0,5,10,15,20,35,50,100,150,200,300,600,max(inzidenz,na.rm=T)),
                             labels=c("0-5",
