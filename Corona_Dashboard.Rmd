@@ -130,7 +130,7 @@ RKI_R_Wert <- read_csv(here("data/RKI_RWert/working/RKI_RWert_heute.csv"))
 }
 
 if (!exists("RKI_Wochen_Inzidenz")) {
-RKI_Wochen_Inzidenz <- read_excel(here("data/RKI_WochenInzidenz/Altersverteilung.xlsx"),sheet = 1)
+RKI_Wochen_Inzidenz <- read_excel(here("data/RKI_WochenInzidenz/Altersverteilung.xlsx"),sheet = 2)
 }
 
 
@@ -871,6 +871,7 @@ Altersverteilung_Plot <- RKI_Wochen_Inzidenz %>%
 ```{r RKI_Wochen_Inzidenz_plott}
 ggplotly(
 Altersverteilung_Plot %>% 
+  filter(fct_level>max(fct_level)-50) %>%
   ggplot(aes(y = Altersgruppe, x = Kalenderwoche, fill = inzidenzfactor))+
   geom_tile(colour="white",size=0.2)+
   scale_y_discrete(expand=c(0,0))+
