@@ -130,7 +130,7 @@ RKI_R_Wert <- read_csv(here("data/RKI_RWert/working/RKI_RWert_heute.csv"))
 }
 
 if (!exists("RKI_Wochen_Inzidenz")) {
-RKI_Wochen_Inzidenz <- read_excel(here("data/RKI_WochenInzidenz/Altersverteilung.xlsx"),sheet = 2)
+RKI_Wochen_Inzidenz <- read_excel(here("data/RKI_WochenInzidenz/Altersverteilung.xlsx"),sheet = 1)
 }
 
 
